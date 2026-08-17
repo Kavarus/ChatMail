@@ -1,0 +1,41 @@
+#:import dp kivy.metrics.dp
+
+<MessageRow>:
+    size_hint_y: None
+    height: message_label.height + dp(16)
+    padding: dp(10), dp(8)
+
+    Widget:
+        size_hint_x: None
+        width: dp(40) if root.is_my_message else 0
+
+    BoxLayout:
+        id: bubble
+        orientation: "vertical"
+        size_hint_x: 0.75
+        size_hint_y: None
+        height: message_label.height + dp(16)
+        padding: dp(10), dp(8)
+
+        canvas.before:
+            Color:
+                rgba: (0.15, 0.45, 0.9, 1) if root.is_my_message else (0.75, 0.75, 0.75, 1)
+
+            RoundedRectangle:
+                pos: self.pos
+                size: self.size
+                radius: [dp(14)]
+
+        Label:
+            id: message_label
+            text: root.message
+            color: (1, 1, 1, 1) if root.is_my_message else (0, 0, 0, 1)
+            text_size: self.width, None
+            halign: "right" if root.is_my_message else "left"
+            valign: "middle"
+            size_hint_y: None
+            height: self.texture_size[1]
+
+    Widget:
+        size_hint_x: None
+        width: dp(40) if not root.is_my_message else 0

@@ -1,0 +1,30 @@
+<MainScreen>:
+    BoxLayout:
+        orientation: "vertical"
+
+        # Верхняя строка
+        BoxLayout:
+            size_hint_y: None
+            height: "50dp"
+            spacing: "5dp"
+            padding: "5dp"
+
+            Button:
+                text: "Меню"
+                on_release: root.open_settings()
+
+            Button:
+                text: "Добавить"
+                on_release: root.add_contact()
+
+        # Список контактов
+        ScrollView:
+            do_scroll_x: False
+
+            GridLayout:
+                id: contacts_list
+                cols: 1
+                spacing: "2dp"
+                padding: "5dp"
+                size_hint_y: None
+                height: self.minimum_height
