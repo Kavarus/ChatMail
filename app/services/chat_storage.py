@@ -6,11 +6,11 @@ This file is part of ChatMail application.
 
 import json
 import hashlib
-from pathlib import Path
 from threading import RLock
+from app.services.paths import DATA_DIR
 
 
-CHATS_DIR = Path("data/chats")
+CHATS_DIR = DATA_DIR / "chats"
 _STORAGE_LOCK = RLock()
 
 

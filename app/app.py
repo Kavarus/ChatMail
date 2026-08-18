@@ -10,6 +10,7 @@ from kivy.clock import Clock, mainthread
 from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager
 
+from app.services.logger import logger
 from app.screens.main_screen import MainScreen
 from app.screens.settings_screen import SettingsScreen
 from app.screens.chat_screen import ChatScreen
@@ -28,32 +29,50 @@ class ChatApp(App):
         self.mail_check_event = None
 
     def build(self):
-        settings = load_settings()
-        contacts = load_contacts()
+        logger.info("Started build()")
 
-        Builder.load_file("app/kv/main_screen.kv")
-        Builder.load_file("app/kv/settings_screen.kv")
-        Builder.load_file("app/kv/message_row.kv")
-        Builder.load_file("app/kv/chat_screen.kv")
-        Builder.load_file("app/kv/add_contact_screen.kv")
+        try:
+            settings = load_settings()
+            contacts = load_contacts()
 
-        manager = ScreenManager()
+            Builder.load_file("app/kv/main_screen.kv")
+            Builder.load_file("app/kv/settings_screen.kv")
+            Builder.load_file("app/kv/message_row.kv")
+            Builder.load_file("app/kv/chat_screen.kv")
+            Builder.load_file("app/kv/add_contact_screen.kv")
+            logger.info("KV-files loaded")
 
-        manager.add_widget(MainScreen(name="main"))
-        manager.add_widget(SettingsScreen(name="settings"))
-        manager.add_widget(ChatScreen(name="chat"))
-        manager.add_widget(AddContactScreen(name="add_contact"))
+            manager = ScreenManager()
 
-        self.mail_poller = MailPoller(settings)
+            manager.add_widget(MainScreen(name="main"))
+            manager.add_widget(SettingsScreen(name="settings"))
+            manager.add_widget(ChatScreen(name="chat"))
+            manager.add_widget(AddContactScreen(name="add_contact"))
 
-        self.mail_check_event = Clock.schedule_interval(
-            self.start_mail_check,
-            10
-        )
+            self.mail_poller = MailPoller(settings)
 
-        return manager
+            self.mail_check_event = Clock.schedule_interval(
+                self.start_mail_check,
+                10
+            )
+
+            return manager
+        except Exception:
+            logger.exception("Error on manager create")
+            raise
+
+    def on_start(self):
+        logger.info("Application started")
+
+    def on_stop(self):
+        # Останавливаем таймер перед завершением приложения.
+        if self.mail_check_event is not None:
+            self.mail_check_event.cancel()
+        logger.info("Application stopped")
 
     def start_mail_check(self, dt):
+        logger.debug("Mail check started")
+
         with self.mail_check_lock:
             if self.mail_check_running:
                 return
@@ -69,6 +88,7 @@ class ChatApp(App):
     def mail_check_worker(self):
         try:
             messages = self.mail_poller.check()
+            logger.info("Mail checked. New messages: %d", len(messages))
 
         except Exception as error:
             self.on_mail_check_error(error)
@@ -87,9 +107,11 @@ class ChatApp(App):
 
     @mainthread
     def on_mail_check_error(self, error):
-        print("Ошибка проверки почты:", error)
+        logger.exception("Mail check errpr:", error)
 
     def process_incoming_message(self, message):
+        logger.info("Обработка входящего сообщения от %s", message.get("sender", "<unknown>"))
+
         screen = self.root.current_screen
 
         # Обновляем список контактов в основном окне
@@ -104,7 +126,3 @@ class ChatApp(App):
             ):
                 screen.add_received_message(message)
 
-    def on_stop(self):
-        # Останавливаем таймер перед завершением приложения.
-        if self.mail_check_event is not None:
-            self.mail_check_event.cancel()

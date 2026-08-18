@@ -4,6 +4,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 This file is part of ChatMail application.
 """
 
+from app.services.logger import logger
 from app.services.mail_reader import read_new_messages
 from app.services.chat_storage import save_message
 from app.services.contacts import load_contacts
@@ -17,6 +18,7 @@ class MailPoller:
     def __init__(self, settings):
         self.settings = settings
         self.processed_ids = set()
+        logger.info("MailPoller initialize")
 
     def check(self):
         contacts = load_contacts()
@@ -30,6 +32,7 @@ class MailPoller:
             self.settings,
             addresses
         )
+        logger.info("Get incoming messages by IMAP: %d", len(incoming))
 
         new_messages = []
 
@@ -56,5 +59,7 @@ class MailPoller:
 
             self.processed_ids.add(message["id"])
             new_messages.append(message)
+
+        logger.info("New messages from contacts: %d", len(new_messages))
 
         return new_messages

@@ -9,6 +9,8 @@ import email
 from email.utils import parseaddr
 from email.header import decode_header, make_header
 
+from app.services.logger import logger
+
 
 def get_body(message):
     if message.is_multipart():
@@ -40,6 +42,8 @@ def decode_header_text(value):
 
 
 def read_new_messages(settings, contact_addresses):
+    logger.info("Mail reading. Contacts: %d", len(contact_addresses))
+
     messages = []
 
     server = settings["imap_server"]
@@ -53,6 +57,7 @@ def read_new_messages(settings, contact_addresses):
         )
 
         mailbox.login(settings["user"], settings["password"])
+        logger.info("IMAP-server authority success")
         mailbox.select("INBOX")
 
         status, data = mailbox.search(None, "UNSEEN")
@@ -92,5 +97,5 @@ def read_new_messages(settings, contact_addresses):
         return messages
 
     except Exception:
-        print("Ошибка чтения почты")
+        logger.exception("IMAP-server authority error (%s:%d)", server, port)
         raise

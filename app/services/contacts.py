@@ -5,12 +5,10 @@ This file is part of ChatMail application.
 """
 
 import json
-from pathlib import Path
-
 from app.models.contact import Contact
+from app.services.paths import DATA_DIR
 
-
-CONTACTS_FILE = Path("data/contacts.json")
+CONTACTS_FILE = DATA_DIR / "contacts.json"
 
 
 def load_contacts():

@@ -10,6 +10,7 @@ from kivy.clock import mainthread
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 
+from app.services.logger import logger
 from app.services.mail_sender import send_email
 from app.widgets.message_row import MessageRow
 from app.services.chat_storage import (
@@ -51,14 +52,16 @@ class ChatScreen(Screen):
             messages_box.add_widget(row)
 
     def send_message(self):
-        """Отправить сообщение."""
         text = self.ids.message_input.text.strip()
 
         # Пустое сообщение не отправляем
         if not text:
             return
 
+        logger.info("Send message from chat screen")
+
         if not self.contact_address:
+            logger.warning("Contact address not found")
             self.show_status("Не выбран получатель")
             return
 
@@ -74,6 +77,7 @@ class ChatScreen(Screen):
         ).start()
 
     def _send_email_in_background(self, recipient, text):
+        logger.info("Email send in background started")
         try:
             send_email(
                 recipient=recipient,
@@ -81,6 +85,7 @@ class ChatScreen(Screen):
                 body=text
             )
         except Exception as error:
+            logger.exception("Email send failed. %s", error)
             self.show_status(f"Ошибка отправки: {error}")
             return
 
@@ -88,6 +93,7 @@ class ChatScreen(Screen):
             recipient,
             text
         )
+        logger.info("Email send in background ended")
         self.show_status("Сообщение отправлено")
 
     @mainthread

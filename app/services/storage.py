@@ -5,16 +5,14 @@ This file is part of ChatMail application.
 """
 
 import json
-from pathlib import Path
-from kivy.app import App
+from app.services.logger import logger
+from app.services.paths import DATA_DIR
 
-
-DATA_DIR = Path(App.get_running_app().user_data_dir)
-DATA_DIR.mkdir(parents=True, exist_ok=True)
-SETTINGS_FILE = DATA_DIR / "/settings.json"
+SETTINGS_FILE = DATA_DIR / "settings.json"
 
 
 def save_settings(settings):
+    logger.info("Email server settings saved")
     SETTINGS_FILE.parent.mkdir(exist_ok=True)
 
     with SETTINGS_FILE.open("w", encoding="utf-8") as file:
