@@ -5,7 +5,6 @@ This file is part of ChatMail application.
 """
 
 from threading import Thread
-
 from kivy.clock import mainthread
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
@@ -22,19 +21,13 @@ from app.services.chat_storage import (
 class ChatScreen(Screen):
     contact_name = StringProperty("")
     contact_address = StringProperty("")
+    contact_guid = StringProperty("")
 
-    def add_received_message(self, message):
-        row = MessageRow(
-            sender=message["sender"],
-            message=message["text"]
-        )
-
-        self.ids.messages_list.add_widget(row)
-
-    def set_contact(self, name, address):
+    def set_contact(self, contact):
         """Установить выбранного собеседника."""
-        self.contact_name = name
-        self.contact_address = address
+        self.contact_name = contact.name
+        self.contact_address = contact.email
+        self.contact_guid = contact.guid
         self.load_messages()
 
     def load_messages(self):
@@ -42,12 +35,12 @@ class ChatScreen(Screen):
         messages_box = self.ids.messages_list
         messages_box.clear_widgets()
 
-        messages = load_messages(self.contact_address)
+        messages = load_messages(self.contact_guid)
 
         for message in messages:
             row = MessageRow(
-                sender=message["sender"],
-                message=message["text"]
+                message=message["text"],
+                direction=message["direction"],
             )
             messages_box.add_widget(row)
 
@@ -62,7 +55,7 @@ class ChatScreen(Screen):
 
         if not self.contact_address:
             logger.warning("Contact address not found")
-            self.show_status("Не выбран получатель")
+            self.show_status("Не указан получатель")
             return
 
         # Сохраняем текст до очистки поля
@@ -72,11 +65,11 @@ class ChatScreen(Screen):
         # Отправка в отдельном потоке, чтобы не блокировать интерфейс
         Thread(
             target=self._send_email_in_background,
-            args=(self.contact_address, text),
+            args=(self.contact_address, self.contact_guid, text),
             daemon=True
         ).start()
 
-    def _send_email_in_background(self, recipient, text):
+    def _send_email_in_background(self, recipient, contact_guid, text):
         logger.info("Email send in background started")
         try:
             send_email(
@@ -84,36 +77,39 @@ class ChatScreen(Screen):
                 subject="ChatMail message",
                 body=text
             )
+            save_message(
+                contact_guid=contact_guid,
+                direction="out",
+                text=text,
+            )
+
         except Exception as error:
             logger.exception("Email send failed. %s", error)
             self.show_status(f"Ошибка отправки: {error}")
             return
 
-        self.add_sent_message(
-            recipient,
-            text
-        )
+        self.add_sent_message(text)
         logger.info("Email send in background ended")
         self.show_status("Сообщение отправлено")
 
     @mainthread
-    def add_sent_message(self, recipient, text):
-        save_message(
-            contact_address=recipient,
-            sender="me",
-            text=text
-        )
-
-        # Показываем сообщение только если пользователь
-        # все еще находится в том же чате
-        if self.contact_address.lower() != recipient.lower():
+    def add_received_message(self, message):
+        if message["contact_guid"] != self.contact_guid:
             return
 
         row = MessageRow(
-            sender="me",
-            message=text
+            message=message["text"],
+            direction="in",
         )
 
+        self.ids.messages_list.add_widget(row)
+
+    @mainthread
+    def add_sent_message(self, text):
+        row = MessageRow(
+            message=text,
+            direction="out",
+        )
         self.ids.messages_list.add_widget(row)
 
     @mainthread

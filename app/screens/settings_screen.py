@@ -4,13 +4,16 @@ SPDX-License-Identifier: GPL-3.0-or-later
 This file is part of ChatMail application.
 """
 
+from threading import Thread
+from kivy.app import App
+from kivy.clock import mainthread
 from kivy.uix.screenmanager import Screen
 from kivy.properties import StringProperty
 
-from app.services.storage import save_settings
-from app.services.storage import load_settings
-
+from app.services.logger import logger
+from app.services.storage import save_settings, load_settings
 from app.services.mail_providers import MAIL_PROVIDERS
+from app.services.mail_connection import check_mail_connection
 
 
 class SettingsScreen(Screen):
@@ -20,23 +23,39 @@ class SettingsScreen(Screen):
         self.ids.provider_spinner.text = settings.get("provider", "Mail.ru")
         self.ids.email_input.text = settings.get("user", "")
         self.ids.password_input.text = settings.get("password", "")
-        print("загружены параметры")
+        self.clear_status()
+        logger.info("Settings loaded")
 
     selected_server = StringProperty("Mail.ru")
+
+    def clear_status(self):
+        self.ids.status_label.text = ""
+        self.ids.status_label.color = (0.3, 0.7, 0.3, 1)
+
+    def show_status(self, message):
+        self.ids.status_label.color = (0.2, 0.7, 0.2, 1)
+        self.ids.status_label.text = message
+
+    def show_error(self, message):
+        self.ids.status_label.color = (0.9, 0.2, 0.2, 1)
+        self.ids.status_label.text = message
 
     def save(self):
         provider = self.ids.provider_spinner.text
         email_address = self.ids.email_input.text.strip()
         password = self.ids.password_input.text.strip()
+        self.clear_status()
 
         if provider not in MAIL_PROVIDERS:
-            self.ids.status_label.text = "Выберите почтовый сервис"
+            self.show_error("Не выбран почтовый сервис")
             return
 
-        if not email_address or not password:
-            self.ids.status_label.text = (
-                "Введите адрес и пароль приложения"
-            )
+        if not email_address:
+            self.show_error("Не заполнен адрес")
+            return
+
+        if not password:
+            self.show_error("Не заполнен пароль")
             return
 
         provider_settings = MAIL_PROVIDERS[provider]
@@ -52,12 +71,51 @@ class SettingsScreen(Screen):
             "ssl": provider_settings["ssl"],
         }
 
-        save_settings(settings)
-        self.manager.transition.direction = "left"
-        self.manager.current = "main"
+        self.set_saving_state(True)
+
+        Thread(
+            target=self._check_and_save,
+            args=(settings,),
+            daemon=True,
+        ).start()
+
+    def _check_and_save(self, settings):
+        """
+        Сначала проверяет подключение, затем сохраняет настройки.
+        """
+
+        try:
+            check_mail_connection(settings)
+            save_settings(settings)
+            App.get_running_app().enable_mail_check(settings)
+
+        except Exception as error:
+            logger.exception("Mail connection check failed")
+            self.on_save_error(f"Ошибка подключения: {error}")
+            return
+
+        self.on_save_success()
+
+    @mainthread
+    def on_save_success(self):
+        self.set_saving_state(False)
+        logger.info("New settings saved")
+        self.show_status("Настройки успешно сохранены")
+
+    @mainthread
+    def on_save_error(self, message):
+        self.set_saving_state(False)
+        self.show_error(message)
+
+    @mainthread
+    def set_saving_state(self, saving):
+        self.ids.save_button.disabled = saving
+
+        if saving:
+            self.ids.save_button.text = "Проверка..."
+        else:
+            self.ids.save_button.text = "Сохранить"
 
     def go_back(self):
         self.manager.transition.direction = "left"
         self.manager.current = "main"
-
-

@@ -52,13 +52,21 @@ class MailPoller:
                 continue
 
             save_message(
-                contact.email,
-                contact.name,
-                message["text"]
+                contact_guid=contact.guid,
+                direction="in",
+                text=message["text"],
             )
+
+            contact.has_new_messages = True
+            message["contact_guid"] = contact.guid
+            message["contact_name"] = contact.name
 
             self.processed_ids.add(message["id"])
             new_messages.append(message)
+
+        # Сохраняем флаги новых сообщений
+        from app.services.contacts import save_contacts
+        save_contacts(contacts)
 
         logger.info("New messages from contacts: %d", len(new_messages))
 

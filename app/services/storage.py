@@ -9,6 +9,12 @@ from app.services.logger import logger
 from app.services.paths import DATA_DIR
 
 SETTINGS_FILE = DATA_DIR / "settings.json"
+REQUIRED_MAIL_SETTINGS = (
+    "user",
+    "password",
+    "imap_server",
+    "imap_port",
+)
 
 
 def save_settings(settings):
@@ -28,3 +34,13 @@ def load_settings():
             return json.load(file)
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+def has_mail_settings(settings):
+    if not settings:
+        return False
+
+    return all(
+        str(settings.get(key, "")).strip()
+        for key in REQUIRED_MAIL_SETTINGS
+    )

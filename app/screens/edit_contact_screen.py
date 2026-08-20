@@ -5,33 +5,39 @@ This file is part of ChatMail application.
 """
 
 from kivy.uix.screenmanager import Screen
-from app.services.contacts import add_contact
+from app.services.contacts import update_contact
 
 
-class AddContactScreen(Screen):
-    parent_screen = None
+class EditContactScreen(Screen):
+    contact = None
 
-    def set_parent(self, parent_screen):
-        self.parent_screen = parent_screen
-        self.ids.contact_name.text = ""
-        self.ids.contact_address.text = ""
+    def set_contact(self, contact):
+        self.contact = contact
+
+        self.ids.contact_name.text = contact.name
+        self.ids.contact_address.text = contact.email
+        self.ids.error_label.text = ""
 
     def save_contact(self):
         name = self.ids.contact_name.text.strip()
         address = self.ids.contact_address.text.strip()
 
         if not name or not address:
-            self.ids.error_label.text = "Заполните оба поля"
+            self.ids.error_label.text = (
+                "Заполните имя и почту"
+            )
             return
 
         try:
-            add_contact(name, address)
+            update_contact(
+                guid=self.contact.guid,
+                name=name,
+                address=address,
+            )
 
         except ValueError as error:
             self.ids.error_label.text = str(error)
             return
-
-        self.parent_screen.load_contact_list()
 
         self.manager.transition.direction = "right"
         self.manager.current = "main"

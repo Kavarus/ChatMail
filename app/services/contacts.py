@@ -5,6 +5,7 @@ This file is part of ChatMail application.
 """
 
 import json
+from uuid import uuid4
 from app.models.contact import Contact
 from app.services.paths import DATA_DIR
 
@@ -40,12 +41,56 @@ def add_contact(name, address):
     """Добавить контакт и сохранить список."""
     contacts = load_contacts()
 
+    normalized_address = address.strip().lower()
+    for contact in contacts:
+        if contact.email.lower() == normalized_address:
+            raise ValueError(
+                "Контакт с таким адресом уже существует"
+            )
+
     contact = Contact(
         name=name.strip(),
-        email=address.strip()
+        email=normalized_address,
+        guid=str(uuid4()),
+        has_new_messages=False,
     )
 
     contacts.append(contact)
     save_contacts(contacts)
 
     return contact
+
+
+def update_contact(guid, name, address):
+    contacts = load_contacts()
+
+    normalized_address = address.strip().lower()
+    for contact in contacts:
+        if (
+            contact.email.lower() == normalized_address
+            and contact.guid != guid
+        ):
+            raise ValueError(
+                "Другой контакт уже использует этот адрес"
+            )
+
+    for contact in contacts:
+        if contact.guid == guid:
+            contact.name = name.strip()
+            contact.email = normalized_address
+            save_contacts(contacts)
+            return contact
+
+    raise ValueError("Контакт не найден")
+
+
+def mark_contact_as_read(guid):
+    contacts = load_contacts()
+
+    for contact in contacts:
+        if contact.guid == guid:
+            contact.has_new_messages = False
+            save_contacts(contacts)
+            return contact
+
+    return None

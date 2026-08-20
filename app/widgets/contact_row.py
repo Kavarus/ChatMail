@@ -4,21 +4,26 @@ SPDX-License-Identifier: GPL-3.0-or-later
 This file is part of ChatMail application.
 """
 
-from kivy.properties import StringProperty
-from kivy.uix.button import Button
+from kivy.event import EventDispatcher
+from kivy.properties import ObjectProperty
+from kivy.uix.boxlayout import BoxLayout
 
 
-class ContactRow(Button):
-    name = StringProperty("")
-    address = StringProperty("")
+class ContactRow(BoxLayout):
+    contact = ObjectProperty(None, allownone=True)
 
     def __init__(self, contact, **kwargs):
         super().__init__(**kwargs)
 
         self.contact = contact
-        self.name = contact.name
-        self.address = contact.email
-
-        self.text = f"{contact.name}\n{contact.email}"
+        self.orientation = "horizontal"
         self.size_hint_y = None
         self.height = "60dp"
+        self.register_event_type("on_chat_release")
+        self.register_event_type("on_edit_release")
+
+    def on_chat_release(self):
+        pass
+
+    def on_edit_release(self):
+        pass

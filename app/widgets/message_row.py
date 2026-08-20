@@ -9,16 +9,16 @@ from kivy.uix.boxlayout import BoxLayout
 
 
 class MessageRow(BoxLayout):
-    sender = StringProperty("")
     message = StringProperty("")
+    direction = StringProperty("in")
     is_my_message = BooleanProperty(False)
 
-    def __init__(self, sender, message, **kwargs):
+    def __init__(self, message, direction, **kwargs):
         super().__init__(**kwargs)
 
-        self.sender = sender
+        self.direction = direction
         self.message = message
-        self.is_my_message = sender == "me"
+        self.is_my_message = direction == "out"
 
         self.orientation = "horizontal"
         self.size_hint_y = None

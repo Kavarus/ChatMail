@@ -15,9 +15,9 @@ from app.screens.main_screen import MainScreen
 from app.screens.settings_screen import SettingsScreen
 from app.screens.chat_screen import ChatScreen
 from app.screens.add_contact_screen import AddContactScreen
+from app.screens.edit_contact_screen import EditContactScreen
 from app.services.mail_poller import MailPoller
-from app.services.storage import load_settings
-from app.services.contacts import load_contacts
+from app.services.storage import load_settings, has_mail_settings
 
 
 class ChatApp(App):
@@ -33,13 +33,14 @@ class ChatApp(App):
 
         try:
             settings = load_settings()
-            contacts = load_contacts()
 
             Builder.load_file("app/kv/main_screen.kv")
             Builder.load_file("app/kv/settings_screen.kv")
             Builder.load_file("app/kv/message_row.kv")
             Builder.load_file("app/kv/chat_screen.kv")
             Builder.load_file("app/kv/add_contact_screen.kv")
+            Builder.load_file("app/kv/edit_contact_screen.kv")
+            Builder.load_file("app/kv/contact_row.kv")
             logger.info("KV-files loaded")
 
             manager = ScreenManager()
@@ -48,13 +49,20 @@ class ChatApp(App):
             manager.add_widget(SettingsScreen(name="settings"))
             manager.add_widget(ChatScreen(name="chat"))
             manager.add_widget(AddContactScreen(name="add_contact"))
+            manager.add_widget(EditContactScreen(name="edit_contact"))
 
-            self.mail_poller = MailPoller(settings)
+            self.mail_poller = None
+            self.mail_check_event = None
 
-            self.mail_check_event = Clock.schedule_interval(
-                self.start_mail_check,
-                10
-            )
+            if has_mail_settings(settings):
+                self.mail_poller = MailPoller(settings)
+
+                self.mail_check_event = Clock.schedule_interval(
+                    self.start_mail_check,
+                    10,
+                )
+            else:
+                logger.info("Mail checking is disabled: settings are empty")
 
             return manager
         except Exception:
@@ -69,6 +77,19 @@ class ChatApp(App):
         if self.mail_check_event is not None:
             self.mail_check_event.cancel()
         logger.info("Application stopped")
+
+    def enable_mail_check(self, settings):
+        if self.mail_check_event is not None:
+            self.mail_check_event.cancel()
+
+        self.mail_poller = MailPoller(settings)
+
+        self.mail_check_event = Clock.schedule_interval(
+            self.start_mail_check,
+            10,
+        )
+
+        logger.info("Mail checking enabled")
 
     def start_mail_check(self, dt):
         logger.debug("Mail check started")
@@ -107,22 +128,16 @@ class ChatApp(App):
 
     @mainthread
     def on_mail_check_error(self, error):
-        logger.exception("Mail check errpr:", error)
+        logger.exception(f"Mail check error: {error}")
 
     def process_incoming_message(self, message):
-        logger.info("Обработка входящего сообщения от %s", message.get("sender", "<unknown>"))
+        logger.info("Incoming message processing begin")
+        contact_guid = message["contact_guid"]
 
-        screen = self.root.current_screen
-
-        # Обновляем список контактов в основном окне
-        if hasattr(screen, "update_contact"):
-            screen.update_contact(message)
+        main_screen = self.root.get_screen("main")
+        main_screen.load_contact_list()
+        chat_screen = self.root.get_screen("chat")
 
         # Обновляем открытый чат
-        if screen.name == "chat":
-            if (
-                    screen.contact_address.lower()
-                    == message["sender"].lower()
-            ):
-                screen.add_received_message(message)
-
+        if self.root.current == "chat" and chat_screen.contact_guid == contact_guid:
+            chat_screen.add_received_message(message)

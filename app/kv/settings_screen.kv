@@ -1,19 +1,36 @@
+#:import dp kivy.metrics.dp
+
 <SettingsScreen>:
     BoxLayout:
         orientation: "vertical"
-        padding: "15dp"
-        spacing: "10dp"
+        padding: dp(15)
+        spacing: dp(10)
 
-        Label:
-            text: "Настройки"
+        # Верхняя панель
+        BoxLayout:
             size_hint_y: None
-            height: "40dp"
-            font_size: "22sp"
+            height: dp(50)
+            spacing: dp(10)
+
+            Label:
+                text: "Настройки"
+                font_size: "22sp"
+                halign: "left"
+                valign: "middle"
+                text_size: self.size
+
+            Widget:
+
+            Button:
+                text: "Назад"
+                size_hint_x: None
+                width: dp(90)
+                on_release: root.go_back()
 
         Label:
             text: "Почтовый сервер"
             size_hint_y: None
-            height: "30dp"
+            height: dp(30)
             halign: "left"
             text_size: self.size
 
@@ -22,12 +39,12 @@
             text: root.selected_server
             values: ["Mail.ru", "Gmail", "Yandex", "Outlook"]
             size_hint_y: None
-            height: "45dp"
+            height: dp(45)
 
         Label:
             text: "Пользователь"
             size_hint_y: None
-            height: "30dp"
+            height: dp(30)
             halign: "left"
             text_size: self.size
 
@@ -35,12 +52,12 @@
             id: email_input
             multiline: False
             size_hint_y: None
-            height: "45dp"
+            height: dp(45)
 
         Label:
             text: "Пароль"
             size_hint_y: None
-            height: "30dp"
+            height: dp(30)
             halign: "left"
             text_size: self.size
 
@@ -49,12 +66,12 @@
             password: True
             multiline: False
             size_hint_y: None
-            height: "45dp"
+            height: dp(45)
 
         Label:
-            text: "Это специальный пароль для приложений"
+            text: "Для подключения используется пароль приложения, который нужно заранее создать в почтовом сервисе."
             size_hint_y: None
-            height: "35dp"
+            height: dp(35)
             color: 0.5, 0.5, 0.5, 1
             font_size: "13sp"
             halign: "left"
@@ -62,12 +79,20 @@
 
         Widget:
 
-        Button:
-            text: "Сохранить"
-            size_hint_y: None
-            height: "50dp"
-            on_release: root.save()
-
+        # Сообщение об успехе или ошибке
         Label:
             id: status_label
             text: ""
+            size_hint_y: None
+            height: dp(45)
+            color: 0.9, 0.2, 0.2, 1
+            halign: "center"
+            valign: "middle"
+            text_size: self.size
+
+        Button:
+            id: save_button
+            text: "Сохранить"
+            size_hint_y: None
+            height: dp(50)
+            on_release: root.save()

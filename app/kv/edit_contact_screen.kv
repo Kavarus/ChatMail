@@ -1,0 +1,46 @@
+<EditContactScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: "15dp"
+        spacing: "10dp"
+
+        Label:
+            text: "Редактирование контакта"
+            size_hint_y: None
+            height: "40dp"
+            font_size: "20sp"
+
+        TextInput:
+            id: contact_name
+            hint_text: "Имя"
+            multiline: False
+            size_hint_y: None
+            height: "45dp"
+
+        TextInput:
+            id: contact_address
+            hint_text: "Почта"
+            multiline: False
+            size_hint_y: None
+            height: "45dp"
+
+        Label:
+            id: error_label
+            text: ""
+            color: 1, 0, 0, 1
+            size_hint_y: None
+            height: "35dp"
+
+        Widget:
+
+        Button:
+            text: "Сохранить"
+            size_hint_y: None
+            height: "50dp"
+            on_release: root.save_contact()
+
+        Button:
+            text: "Отмена"
+            size_hint_y: None
+            height: "50dp"
+            on_release: root.cancel()

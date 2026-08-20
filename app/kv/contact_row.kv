@@ -1,0 +1,21 @@
+#:import dp kivy.metrics.dp
+
+<ContactRow>:
+    spacing: dp(5)
+    padding: dp(5)
+
+    Button:
+        text: root.contact.name + "\n" + root.contact.email if root.contact else ""
+        halign: "left"
+        valign: "middle"
+        text_size: self.size
+        background_normal: ""
+        background_color:
+            (0.5, 0.7, 0.2, 1) if root.contact and root.contact.has_new_messages else (0.5, 0.5, 0.5, 1)
+        on_release: root.dispatch("on_chat_release")
+
+    Button:
+        text: "..."
+        size_hint_x: None
+        width: dp(50)
+        on_release: root.dispatch("on_edit_release")
