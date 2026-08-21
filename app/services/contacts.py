@@ -30,11 +30,12 @@ def load_contacts():
 def save_contacts(contacts):
     """Сохранить список контактов."""
     CONTACTS_FILE.parent.mkdir(parents=True, exist_ok=True)
-
     data = [contact.to_dict() for contact in contacts]
 
-    with CONTACTS_FILE.open("w", encoding="utf-8") as file:
+    temporary_file = CONTACTS_FILE.with_suffix(".tmp")
+    with temporary_file.open("w", encoding="utf-8") as file:
         json.dump(data, file, ensure_ascii=False, indent=4)
+    temporary_file.replace(CONTACTS_FILE)
 
 
 def add_contact(name, address):
@@ -80,6 +81,19 @@ def update_contact(guid, name, address):
             contact.email = normalized_address
             save_contacts(contacts)
             return contact
+
+    raise ValueError("Контакт не найден")
+
+
+def delete_contact(guid):
+    """Удаляет контакт и возвращает удалённый объект."""
+    contacts = load_contacts()
+
+    for index, contact in enumerate(contacts):
+        if contact.guid == guid:
+            deleted_contact = contacts.pop(index)
+            save_contacts(contacts)
+            return deleted_contact
 
     raise ValueError("Контакт не найден")
 

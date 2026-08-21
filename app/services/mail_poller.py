@@ -8,6 +8,7 @@ from app.services.logger import logger
 from app.services.mail_reader import read_new_messages
 from app.services.chat_storage import save_message
 from app.services.contacts import load_contacts
+from app.services.storage import (load_processed_ids, save_processed_ids)
 
 
 def normalize_email(value: str) -> str:
@@ -17,7 +18,7 @@ def normalize_email(value: str) -> str:
 class MailPoller:
     def __init__(self, settings):
         self.settings = settings
-        self.processed_ids = set()
+        self.processed_ids = load_processed_ids()
         logger.info("MailPoller initialize")
 
     def check(self):
@@ -51,11 +52,16 @@ class MailPoller:
             if contact is None:
                 continue
 
-            save_message(
-                contact_guid=contact.guid,
-                direction="in",
-                text=message["text"],
-            )
+            try:
+                save_message(
+                    contact_guid=contact.guid,
+                    direction="in",
+                    text=message["text"],
+                    created_at=message["created_at"],
+                )
+            except Exception:
+                logger.exception("Failed to save incoming message: %s", message["id"])
+                continue
 
             contact.has_new_messages = True
             message["contact_guid"] = contact.guid
@@ -68,6 +74,8 @@ class MailPoller:
         from app.services.contacts import save_contacts
         save_contacts(contacts)
 
-        logger.info("New messages from contacts: %d", len(new_messages))
+        if new_messages:
+            save_processed_ids(self.processed_ids)
+            logger.info("New messages from contacts: %d", len(new_messages))
 
         return new_messages

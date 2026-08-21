@@ -19,6 +19,9 @@ from app.screens.edit_contact_screen import EditContactScreen
 from app.services.mail_poller import MailPoller
 from app.services.storage import load_settings, has_mail_settings
 
+ACTIVE_MAIL_INTERVAL = 45
+BACKGROUND_MAIL_INTERVAL = 300
+
 
 class ChatApp(App):
     def __init__(self, **kwargs):
@@ -26,7 +29,10 @@ class ChatApp(App):
 
         self.mail_check_lock = Lock()
         self.mail_check_running = False
+        self.mail_poller = None
         self.mail_check_event = None
+        self.mail_check_interval = None
+        self.is_app_in_background = False
 
     def build(self):
         logger.info("Started build()")
@@ -56,11 +62,7 @@ class ChatApp(App):
 
             if has_mail_settings(settings):
                 self.mail_poller = MailPoller(settings)
-
-                self.mail_check_event = Clock.schedule_interval(
-                    self.start_mail_check,
-                    10,
-                )
+                self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
             else:
                 logger.info("Mail checking is disabled: settings are empty")
 
@@ -71,6 +73,25 @@ class ChatApp(App):
 
     def on_start(self):
         logger.info("Application started")
+
+    def on_pause(self):
+        logger.info("Application paused")
+        self.is_app_in_background = True
+        self.schedule_mail_check(BACKGROUND_MAIL_INTERVAL)
+        return True
+
+    def on_resume(self):
+        logger.info("Application resumed")
+        self.is_app_in_background = False
+
+        if self.mail_poller is not None:
+            self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
+
+            # Желательно проверить почту сразу после возвращения
+            Clock.schedule_once(
+                lambda dt: self.start_mail_check(dt),
+                0,
+            )
 
     def on_stop(self):
         # Останавливаем таймер перед завершением приложения.
@@ -83,12 +104,7 @@ class ChatApp(App):
             self.mail_check_event.cancel()
 
         self.mail_poller = MailPoller(settings)
-
-        self.mail_check_event = Clock.schedule_interval(
-            self.start_mail_check,
-            10,
-        )
-
+        self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
         logger.info("Mail checking enabled")
 
     def start_mail_check(self, dt):
@@ -141,3 +157,20 @@ class ChatApp(App):
         # Обновляем открытый чат
         if self.root.current == "chat" and chat_screen.contact_guid == contact_guid:
             chat_screen.add_received_message(message)
+
+    def schedule_mail_check(self, interval):
+        if self.mail_check_event is not None:
+            self.mail_check_event.cancel()
+            self.mail_check_event = None
+
+        self.mail_check_interval = interval
+
+        if self.mail_poller is None:
+            logger.debug("MailPoller not initiated. Mail checking schedule not started.")
+            return
+
+        self.mail_check_event = Clock.schedule_interval(
+            self.start_mail_check,
+            interval,
+        )
+        logger.info("Mail checking scheduled every %s seconds", interval)

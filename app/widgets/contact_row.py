@@ -4,7 +4,6 @@ SPDX-License-Identifier: GPL-3.0-or-later
 This file is part of ChatMail application.
 """
 
-from kivy.event import EventDispatcher
 from kivy.properties import ObjectProperty
 from kivy.uix.boxlayout import BoxLayout
 

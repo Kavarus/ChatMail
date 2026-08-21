@@ -40,6 +40,13 @@
             on_release: root.save_contact()
 
         Button:
+            text: "Удалить контакт"
+            size_hint_y: None
+            height: "50dp"
+            background_color: 1, 0.2, 0.2, 1
+            on_release: root.confirm_delete()
+
+        Button:
             text: "Отмена"
             size_hint_y: None
             height: "50dp"

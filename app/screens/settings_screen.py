@@ -12,7 +12,7 @@ from kivy.properties import StringProperty
 
 from app.services.logger import logger
 from app.services.storage import save_settings, load_settings
-from app.services.mail_providers import MAIL_PROVIDERS
+from app.data.mail_providers import MAIL_PROVIDERS
 from app.services.mail_connection import check_mail_connection
 
 
@@ -90,8 +90,7 @@ class SettingsScreen(Screen):
             App.get_running_app().enable_mail_check(settings)
 
         except Exception as error:
-            logger.exception("Mail connection check failed")
-            self.on_save_error(f"Ошибка подключения: {error}")
+            self.on_save_error(error)
             return
 
         self.on_save_success()
@@ -103,9 +102,10 @@ class SettingsScreen(Screen):
         self.show_status("Настройки успешно сохранены")
 
     @mainthread
-    def on_save_error(self, message):
+    def on_save_error(self, error):
         self.set_saving_state(False)
-        self.show_error(message)
+        logger.exception(f"Mail connection check error: {error}")
+        self.show_error("Ошибка подключения, настройки не сохранены")
 
     @mainthread
     def set_saving_state(self, saving):

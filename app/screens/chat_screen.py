@@ -5,6 +5,7 @@ This file is part of ChatMail application.
 """
 
 from threading import Thread
+from datetime import datetime, timezone
 from kivy.clock import mainthread
 from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
@@ -16,6 +17,22 @@ from app.services.chat_storage import (
     load_messages,
     save_message
 )
+
+
+def parse_message_datetime(message):
+    value = message.get("created_at")
+
+    if not value:
+        return datetime.min.replace(tzinfo=timezone.utc)
+
+    try:
+        result = datetime.fromisoformat(value)
+        if result.tzinfo is None:
+            result = result.replace(tzinfo=timezone.utc)
+        return result.astimezone(timezone.utc)
+
+    except (TypeError, ValueError):
+        return datetime.min.replace(tzinfo=timezone.utc)
 
 
 class ChatScreen(Screen):
@@ -36,11 +53,13 @@ class ChatScreen(Screen):
         messages_box.clear_widgets()
 
         messages = load_messages(self.contact_guid)
+        messages.sort(key=parse_message_datetime)
 
         for message in messages:
             row = MessageRow(
-                message=message["text"],
-                direction=message["direction"],
+                message=message.get("text", ""),
+                direction=message.get("direction", "in"),
+                created_at=message.get("created_at", ""),
             )
             messages_box.add_widget(row)
 
@@ -71,6 +90,7 @@ class ChatScreen(Screen):
 
     def _send_email_in_background(self, recipient, contact_guid, text):
         logger.info("Email send in background started")
+        created_at = datetime.now(timezone.utc).isoformat()
         try:
             send_email(
                 recipient=recipient,
@@ -81,6 +101,7 @@ class ChatScreen(Screen):
                 contact_guid=contact_guid,
                 direction="out",
                 text=text,
+                created_at=created_at,
             )
 
         except Exception as error:
@@ -88,7 +109,7 @@ class ChatScreen(Screen):
             self.show_status(f"Ошибка отправки: {error}")
             return
 
-        self.add_sent_message(text)
+        self.add_sent_message(text, created_at)
         logger.info("Email send in background ended")
         self.show_status("Сообщение отправлено")
 
@@ -100,15 +121,17 @@ class ChatScreen(Screen):
         row = MessageRow(
             message=message["text"],
             direction="in",
+            created_at=message["created_at"],
         )
 
         self.ids.messages_list.add_widget(row)
 
     @mainthread
-    def add_sent_message(self, text):
+    def add_sent_message(self, text, created_at):
         row = MessageRow(
             message=text,
             direction="out",
+            created_at=created_at,
         )
         self.ids.messages_list.add_widget(row)
 
