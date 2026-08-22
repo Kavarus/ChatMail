@@ -11,13 +11,16 @@ from kivy.lang import Builder
 from kivy.uix.screenmanager import ScreenManager
 
 from app.services.logger import logger
+from app.services.i18n import i18n
 from app.screens.main_screen import MainScreen
 from app.screens.settings_screen import SettingsScreen
 from app.screens.chat_screen import ChatScreen
 from app.screens.add_contact_screen import AddContactScreen
 from app.screens.edit_contact_screen import EditContactScreen
+from app.screens.welcome_screen import WelcomeScreen
 from app.services.mail_poller import MailPoller
-from app.services.storage import load_settings, has_mail_settings
+from app.services.storage import load_settings, has_mail_settings, is_first_run, get_saved_language
+
 
 ACTIVE_MAIL_INTERVAL = 45
 BACKGROUND_MAIL_INTERVAL = 300
@@ -39,7 +42,9 @@ class ChatApp(App):
 
         try:
             settings = load_settings()
+            i18n.set_language(get_saved_language(settings))
 
+            Builder.load_file("app/kv/welcome_screen.kv")
             Builder.load_file("app/kv/main_screen.kv")
             Builder.load_file("app/kv/settings_screen.kv")
             Builder.load_file("app/kv/message_row.kv")
@@ -51,6 +56,7 @@ class ChatApp(App):
 
             manager = ScreenManager()
 
+            manager.add_widget(WelcomeScreen(name="welcome"))
             manager.add_widget(MainScreen(name="main"))
             manager.add_widget(SettingsScreen(name="settings"))
             manager.add_widget(ChatScreen(name="chat"))
@@ -60,16 +66,25 @@ class ChatApp(App):
             self.mail_poller = None
             self.mail_check_event = None
 
-            if has_mail_settings(settings):
-                self.mail_poller = MailPoller(settings)
-                self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
+            if is_first_run(settings):
+                manager.current = "welcome"
+                logger.info("First launch: welcome screen shown")
             else:
-                logger.info("Mail checking is disabled: settings are empty")
+                manager.current = "main"
+                self.initialize_mail_check(settings)
 
             return manager
         except Exception:
             logger.exception("Error on manager create")
             raise
+
+    def initialize_mail_check(self, settings):
+        if not has_mail_settings(settings):
+            logger.info("Mail checking is disabled: settings are empty")
+            return
+
+        self.mail_poller = MailPoller(settings)
+        self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
 
     def on_start(self):
         logger.info("Application started")
@@ -98,6 +113,17 @@ class ChatApp(App):
         if self.mail_check_event is not None:
             self.mail_check_event.cancel()
         logger.info("Application stopped")
+
+    def open_main_screen(self):
+        logger.info("Opening main screen")
+        try:
+            settings = load_settings()
+            self.initialize_mail_check(settings)
+            self.root.transition.direction = "left"
+            self.root.current = "main"
+            logger.info("Main screen opened")
+        except Exception:
+            logger.exception("Failed to open main screen")
 
     def enable_mail_check(self, settings):
         if self.mail_check_event is not None:

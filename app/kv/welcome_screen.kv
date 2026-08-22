@@ -1,0 +1,74 @@
+#:import dp kivy.metrics.dp
+#:import i18n app.services.i18n.i18n
+#:import TranslationLabel app.widgets.translation_label.TranslationLabel
+#:import TranslationButton app.widgets.translation_button.TranslationButton
+#:import TranslationSpinner app.widgets.translation_spinner.TranslationSpinner
+
+<WelcomeScreen>:
+    BoxLayout:
+        orientation: "vertical"
+        padding: dp(20)
+        spacing: dp(12)
+
+        ScrollView:
+            do_scroll_x: False
+
+            BoxLayout:
+                orientation: "vertical"
+                spacing: dp(15)
+                size_hint_y: None
+                height: self.minimum_height
+
+                TranslationLabel:
+                    translation_key: "welcome_title"
+                    font_size: "26sp"
+                    bold: True
+                    size_hint_y: None
+                    height: dp(50)
+                    halign: "center"
+                    valign: "middle"
+                    text_size: self.size
+
+                TranslationLabel:
+                    translation_key: "welcome_text"
+                    size_hint_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]
+                    halign: "left"
+                    valign: "top"
+
+                TranslationLabel:
+                    translation_key: "terms_title"
+                    font_size: "20sp"
+                    bold: True
+                    size_hint_y: None
+                    height: dp(40)
+                    halign: "left"
+                    text_size: self.size
+
+                TranslationLabel:
+                    translation_key: "terms_text"
+                    size_hint_y: None
+                    text_size: self.width, None
+                    height: self.texture_size[1]
+                    halign: "left"
+                    valign: "top"
+
+        Label:
+            text: "Language"
+            size_hint_y: None
+            height: dp(30)
+            halign: "left"
+            text_size: self.size
+
+        TranslationSpinner:
+            id: language_spinner
+            size_hint_y: None
+            height: dp(45)
+            on_text: root.select_language(self.selected_language)
+
+        TranslationButton:
+            translation_key: "accept"
+            size_hint_y: None
+            height: dp(55)
+            on_release: root.accept()

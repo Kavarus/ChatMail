@@ -9,8 +9,9 @@ import email
 from datetime import datetime, timezone
 from email.utils import parseaddr, parsedate_to_datetime
 from email.header import decode_header, make_header
-
 from app.services.logger import logger
+
+MAIL_SUBJECT = "ChatMail message"
 
 
 def get_body(message):
@@ -82,17 +83,8 @@ def read_new_messages(settings, contact_addresses):
         mailbox.login(settings["user"], settings["password"])
         logger.info("IMAP-server authority success")
         mailbox.select("INBOX")
-
-        status, data = mailbox.search(None, "UNSEEN")
-        if status != "OK":
-            return messages
-
-        addresses = {
-            address.lower()
-            for address in contact_addresses
-        }
-
-        message_ids = data[0].split()
+        message_ids = search_message_ids(mailbox)
+        addresses = {address.lower() for address in contact_addresses}
 
         for message_id in message_ids:
             status, raw_data = mailbox.fetch(message_id, "(BODY.PEEK[])")
@@ -103,8 +95,8 @@ def read_new_messages(settings, contact_addresses):
             message = email.message_from_bytes(raw_data[0][1])
             subject = decode_header_text(message.get("Subject", "")).strip()
 
-            if subject != "ChatMail message":
-                continue
+            # if subject != "ChatMail message":
+            #     continue
 
             _, sender = parseaddr(message.get("From", ""))
             sender = sender.lower()
@@ -133,6 +125,18 @@ def read_new_messages(settings, contact_addresses):
                 mailbox.logout()
             except Exception:
                 pass
+
+
+def search_message_ids(mailbox):
+    status, data = mailbox.search(None, "UNSEEN", "SUBJECT", f'"{MAIL_SUBJECT}"')
+
+    if status != "OK":
+        raise RuntimeError(f"IMAP search failed: {status}")
+
+    if not data or not data[0]:
+        return []
+
+    return data[0].split()
 
 
 def mark_as_seen(mailbox, message_id):

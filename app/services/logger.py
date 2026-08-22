@@ -13,6 +13,8 @@ LOG_FILE = DATA_DIR / "chatmail.log"
 
 
 def setup_logging():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+
     logging.basicConfig(
         level=logging.DEBUG,
         format="%(asctime)s %(levelname)s %(name)s: %(message)s",
@@ -27,18 +29,12 @@ def setup_logging():
 
     def handle_exception(exc_type, exc_value, exc_traceback):
         if issubclass(exc_type, KeyboardInterrupt):
-            sys.__excepthook__(
-                exc_type, exc_value, exc_traceback
-            )
+            sys.__excepthook__(exc_type, exc_value, exc_traceback)
             return
 
         app_logger.critical(
             "Exception",
-            exc_info=(
-                exc_type,
-                exc_value,
-                exc_traceback,
-            ),
+            exc_info=(exc_type, exc_value, exc_traceback),
         )
 
     sys.excepthook = handle_exception
@@ -48,11 +44,7 @@ def setup_logging():
             app_logger.critical(
                 "Exception in thread %s",
                 args.thread.name if args.thread else "unknown",
-                exc_info=(
-                    args.exc_type,
-                    args.exc_value,
-                    args.exc_traceback,
-                ),
+                exc_info=(args.exc_type, args.exc_value, args.exc_traceback),
             )
 
         threading.excepthook = handle_thread_exception

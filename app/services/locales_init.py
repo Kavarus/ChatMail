@@ -1,0 +1,27 @@
+"""
+Copyright (C) 2026 Alexandr Kavaru
+SPDX-License-Identifier: GPL-3.0-or-later
+This file is part of ChatMail application.
+"""
+
+from shutil import copy2
+from pathlib import Path
+from kivy.utils import platform
+from app.services.paths import LOCALES_DIR
+
+BASE_DIR = Path(__file__).resolve().parents[1]
+BUNDLED_LOCALES_DIR = BASE_DIR / ("data/locales" if platform == "android" else "data\\locales")
+
+
+def install_locales():
+    if not BUNDLED_LOCALES_DIR.exists():
+        return
+
+    LOCALES_DIR.mkdir(parents=True, exist_ok=True)
+
+    for source_file in BUNDLED_LOCALES_DIR.glob("*.json"):
+        target_file = LOCALES_DIR / source_file.name
+
+        # Не перезаписываем переводы, изменённые пользователем
+        if not target_file.exists():
+            copy2(source_file, target_file)

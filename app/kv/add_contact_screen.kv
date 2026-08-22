@@ -1,46 +1,51 @@
+#:import dp kivy.metrics.dp
+#:import TranslationLabel app.widgets.translation_label.TranslationLabel
+#:import TranslationButton app.widgets.translation_button.TranslationButton
+#:import TranslationTextInput app.widgets.translation_text_input.TranslationTextInput
+
 <AddContactScreen>:
     BoxLayout:
         orientation: "vertical"
-        padding: "15dp"
-        spacing: "10dp"
+        padding: dp(15)
+        spacing: dp(10)
 
-        Label:
-            text: "Добавить контакт"
+        TranslationLabel:
+            translation_key: "add_contact"
             size_hint_y: None
-            height: "40dp"
+            height: dp(40)
             font_size: "20sp"
 
-        TextInput:
+        TranslationTextInput:
             id: contact_name
-            hint_text: "Имя"
+            hint_translation_key: "contact_name"
             multiline: False
             size_hint_y: None
-            height: "45dp"
+            height: dp(45)
 
-        TextInput:
+        TranslationTextInput:
             id: contact_address
-            hint_text: "Адрес"
+            hint_translation_key: "contact_address"
             multiline: False
             size_hint_y: None
-            height: "45dp"
+            height: dp(45)
 
         Label:
             id: error_label
             text: ""
             color: 1, 0, 0, 1
             size_hint_y: None
-            height: "30dp"
+            height: dp(30)
 
         Widget:
 
-        Button:
-            text: "Сохранить"
+        TranslationButton:
+            translation_key: "save"
             size_hint_y: None
-            height: "50dp"
+            height: dp(50)
             on_release: root.save_contact()
 
-        Button:
-            text: "Отмена"
+        TranslationButton:
+            translation_key: "cancel"
             size_hint_y: None
-            height: "50dp"
+            height: dp(50)
             on_release: root.cancel()

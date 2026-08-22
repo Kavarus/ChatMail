@@ -1,4 +1,6 @@
 #:import dp kivy.metrics.dp
+#:import TranslationButton app.widgets.translation_button.TranslationButton
+#:import TranslationLabel app.widgets.translation_label.TranslationLabel
 
 <SettingsScreen>:
     BoxLayout:
@@ -12,8 +14,8 @@
             height: dp(50)
             spacing: dp(10)
 
-            Label:
-                text: "Настройки"
+            TranslationLabel:
+                translation_key: "settings"
                 font_size: "22sp"
                 halign: "left"
                 valign: "middle"
@@ -21,14 +23,14 @@
 
             Widget:
 
-            Button:
-                text: "Назад"
+            TranslationButton:
+                translation_key: "back"
                 size_hint_x: None
                 width: dp(90)
                 on_release: root.go_back()
 
-        Label:
-            text: "Почтовый сервер"
+        TranslationLabel:
+            translation_key: "mail_provider"
             size_hint_y: None
             height: dp(30)
             halign: "left"
@@ -41,8 +43,8 @@
             size_hint_y: None
             height: dp(45)
 
-        Label:
-            text: "Пользователь"
+        TranslationLabel:
+            translation_key: "email"
             size_hint_y: None
             height: dp(30)
             halign: "left"
@@ -54,8 +56,8 @@
             size_hint_y: None
             height: dp(45)
 
-        Label:
-            text: "Пароль"
+        TranslationLabel:
+            translation_key: "password"
             size_hint_y: None
             height: dp(30)
             halign: "left"
@@ -68,8 +70,8 @@
             size_hint_y: None
             height: dp(45)
 
-        Label:
-            text: "Для подключения используется пароль приложения, который нужно заранее создать в почтовом сервисе."
+        TranslationLabel:
+            translation_key: "password_hint"
             size_hint_y: None
             height: dp(70)
             color: 0.5, 0.5, 0.5, 1
@@ -90,9 +92,9 @@
             valign: "middle"
             text_size: self.size
 
-        Button:
+        TranslationButton:
             id: save_button
-            text: "Сохранить"
+            translation_key: "save"
             size_hint_y: None
             height: dp(50)
             on_release: root.save()

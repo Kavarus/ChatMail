@@ -1,3 +1,7 @@
+#:import dp kivy.metrics.dp
+#:import TranslationButton app.widgets.translation_button.TranslationButton
+#:import TranslationLabel app.widgets.translation_label.TranslationLabel
+
 <MainScreen>:
     BoxLayout:
         orientation: "vertical"
@@ -5,17 +9,29 @@
         # Верхняя строка
         BoxLayout:
             size_hint_y: None
-            height: "50dp"
-            spacing: "5dp"
-            padding: "5dp"
+            height: dp(50)
+            spacing: dp(5)
+            padding: dp(5)
 
-            Button:
-                text: "Меню"
+            TranslationButton:
+                translation_key: "settings"
+                size_hint_x: None
+                width: dp(120)
                 on_release: root.open_settings()
 
-            Button:
-                text: "Добавить"
+            Widget:
+
+            TranslationButton:
+                translation_key: "add_contact"
+                size_hint_x: None
+                width: dp(160)
                 on_release: root.add_contact()
+
+        TranslationLabel:
+            translation_key: "main_title"
+            size_hint_y: None
+            height: dp(40)
+            font_size: "20sp"
 
         # Список контактов
         ScrollView:
@@ -24,7 +40,7 @@
             GridLayout:
                 id: contacts_list
                 cols: 1
-                spacing: "2dp"
-                padding: "5dp"
+                spacing: dp(2)
+                padding: dp(5)
                 size_hint_y: None
                 height: self.minimum_height

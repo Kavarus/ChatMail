@@ -1,3 +1,8 @@
+#:import dp kivy.metrics.dp
+#:import TranslationLabel app.widgets.translation_label.TranslationLabel
+#:import TranslationButton app.widgets.translation_button.TranslationButton
+#:import TranslationTextInput app.widgets.translation_text_input.TranslationTextInput
+
 <ChatScreen>:
     BoxLayout:
         orientation: "vertical"
@@ -5,14 +10,14 @@
         # Верхняя панель
         BoxLayout:
             size_hint_y: None
-            height: "50dp"
-            padding: "5dp"
-            spacing: "5dp"
+            height: dp(50)
+            padding: dp(5)
+            spacing: dp(5)
 
-            Button:
-                text: "Назад"
+            TranslationButton:
+                translation_key: "back"
                 size_hint_x: None
-                width: "80dp"
+                width: dp(80)
                 on_release: root.go_back()
 
             Label:
@@ -24,7 +29,7 @@
 
             Widget:
                 size_hint_x: None
-                width: "80dp"
+                width: dp(80)
 
         # Сообщения
         ScrollView:
@@ -34,8 +39,8 @@
             GridLayout:
                 id: messages_list
                 cols: 1
-                spacing: "5dp"
-                padding: "10dp"
+                spacing: dp(5)
+                padding: dp(10)
                 size_hint_y: None
                 height: self.minimum_height
 
@@ -43,24 +48,24 @@
             id: status_label
             text: ""
             size_hint_y: None
-            height: "25dp"
+            height: dp(25)
             color: 0.3, 0.3, 0.3, 1
 
         # Нижняя панель
         BoxLayout:
             size_hint_y: None
-            height: "55dp"
-            padding: "5dp"
-            spacing: "5dp"
+            height: dp(50)
+            padding: dp(5)
+            spacing: dp(5)
 
-            TextInput:
+            TranslationTextInput:
                 id: message_input
                 multiline: False
-                hint_text: "Введите сообщение"
+                hint_translation_key: "message_hint"
                 on_text_validate: root.send_message()
 
-            Button:
-                text: "Отправить"
+            TranslationButton:
+                translation_key: "send"
                 size_hint_x: None
-                width: "110dp"
+                width: dp(110)
                 on_release: root.send_message()

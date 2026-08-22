@@ -6,6 +6,7 @@ This file is part of ChatMail application.
 
 from kivy.uix.screenmanager import Screen
 from app.services.contacts import add_contact
+from app.services.i18n import i18n
 
 
 class AddContactScreen(Screen):
@@ -21,7 +22,7 @@ class AddContactScreen(Screen):
         address = self.ids.contact_address.text.strip()
 
         if not name or not address:
-            self.ids.error_label.text = "Заполните оба поля"
+            self.ids.error_label.text = i18n.get("contact_fields_required")
             return
 
         try:

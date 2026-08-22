@@ -16,6 +16,11 @@ REQUIRED_MAIL_SETTINGS = (
     "imap_server",
     "imap_port",
 )
+DEFAULT_LANGUAGE = "ru"
+
+
+def is_first_run(settings):
+    return not bool(settings.get("terms_accepted", False))
 
 
 def save_settings(settings):
@@ -35,6 +40,17 @@ def load_settings():
             return json.load(file)
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+def accept_terms(language):
+    from app.services.i18n import i18n
+    if language not in i18n.get_available_languages():
+        language = i18n.language
+
+    settings = load_settings()
+    settings["language"] = language
+    settings["terms_accepted"] = True
+    save_settings(settings)
 
 
 def has_mail_settings(settings):
@@ -67,3 +83,13 @@ def load_processed_ids():
             return set(json.load(file))
     except (OSError, json.JSONDecodeError):
         return set()
+
+
+def get_saved_language(settings):
+    from app.services.i18n import i18n
+    language = settings.get("language", DEFAULT_LANGUAGE)
+    available_languages = i18n.get_available_languages()
+    if language in available_languages:
+        return language
+
+    return available_languages[0] if available_languages else DEFAULT_LANGUAGE

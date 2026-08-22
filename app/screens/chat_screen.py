@@ -11,6 +11,7 @@ from kivy.properties import StringProperty
 from kivy.uix.screenmanager import Screen
 
 from app.services.logger import logger
+from app.services.i18n import i18n
 from app.services.mail_sender import send_email
 from app.widgets.message_row import MessageRow
 from app.services.chat_storage import (
@@ -74,12 +75,12 @@ class ChatScreen(Screen):
 
         if not self.contact_address:
             logger.warning("Contact address not found")
-            self.show_status("Не указан получатель")
+            self.show_status(i18n.get("contact_empty"))
             return
 
         # Сохраняем текст до очистки поля
         self.ids.message_input.text = ""
-        self.show_status("Отправка...")
+        self.show_status(i18n.get("sending"))
 
         # Отправка в отдельном потоке, чтобы не блокировать интерфейс
         Thread(
@@ -106,12 +107,12 @@ class ChatScreen(Screen):
 
         except Exception as error:
             logger.exception("Email send failed. %s", error)
-            self.show_status(f"Ошибка отправки: {error}")
+            self.show_status(i18n.get("send_error").format(error=error))
             return
 
         self.add_sent_message(text, created_at)
         logger.info("Email send in background ended")
-        self.show_status("Сообщение отправлено")
+        self.show_status(i18n.get("message_sent"))
 
     @mainthread
     def add_received_message(self, message):

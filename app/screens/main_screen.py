@@ -5,6 +5,7 @@ This file is part of ChatMail application.
 """
 
 from kivy.uix.screenmanager import Screen
+from app.services.logger import logger
 from app.services.contacts import load_contacts, mark_contact_as_read
 from app.widgets.contact_row import ContactRow
 
@@ -27,15 +28,20 @@ class MainScreen(Screen):
 
     def load_contact_list(self):
         """Считать контакты и показать их на экране."""
-        contacts_box = self.ids.contacts_list
-        contacts_box.clear_widgets()
+        logger.info("Loading contacts")
+        try:
+            contacts_box = self.ids.contacts_list
+            contacts_box.clear_widgets()
 
-        contacts = load_contacts()
-        for contact in contacts:
-            row = ContactRow(contact=contact)
-            row.bind(on_chat_release=self.open_chat)
-            row.bind(on_edit_release=self.open_edit_contact)
-            contacts_box.add_widget(row)
+            contacts = load_contacts()
+            for contact in contacts:
+                row = ContactRow(contact=contact)
+                row.bind(on_chat_release=self.open_chat)
+                row.bind(on_edit_release=self.open_edit_contact)
+                contacts_box.add_widget(row)
+
+        except Exception:
+            logger.exception("Failed to load contact list")
 
     def open_chat(self, row):
         """Открыть чат с выбранным контактом."""

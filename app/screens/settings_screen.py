@@ -14,6 +14,7 @@ from app.services.logger import logger
 from app.services.storage import save_settings, load_settings
 from app.data.mail_providers import MAIL_PROVIDERS
 from app.services.mail_connection import check_mail_connection
+from app.services.i18n import i18n
 
 
 class SettingsScreen(Screen):
@@ -47,15 +48,15 @@ class SettingsScreen(Screen):
         self.clear_status()
 
         if provider not in MAIL_PROVIDERS:
-            self.show_error("Не выбран почтовый сервис")
+            self.show_error(i18n.get("provider_required"))
             return
 
         if not email_address:
-            self.show_error("Не заполнен адрес")
+            self.show_error(i18n.get("email_required"))
             return
 
         if not password:
-            self.show_error("Не заполнен пароль")
+            self.show_error(i18n.get("password_required"))
             return
 
         provider_settings = MAIL_PROVIDERS[provider]
@@ -99,22 +100,22 @@ class SettingsScreen(Screen):
     def on_save_success(self):
         self.set_saving_state(False)
         logger.info("New settings saved")
-        self.show_status("Настройки успешно сохранены")
+        self.show_status(i18n.get("settings_saved"))
 
     @mainthread
     def on_save_error(self, error):
         self.set_saving_state(False)
         logger.exception(f"Mail connection check error: {error}")
-        self.show_error("Ошибка подключения, настройки не сохранены")
+        self.show_error(i18n.get("connection_error"))
 
     @mainthread
     def set_saving_state(self, saving):
         self.ids.save_button.disabled = saving
 
         if saving:
-            self.ids.save_button.text = "Проверка..."
+            self.ids.save_button.text = i18n.get("checking")
         else:
-            self.ids.save_button.text = "Сохранить"
+            self.ids.save_button.text = i18n.get("save")
 
     def go_back(self):
         self.manager.transition.direction = "left"

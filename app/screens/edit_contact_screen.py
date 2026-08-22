@@ -11,6 +11,7 @@ from kivy.uix.button import Button
 from kivy.uix.boxlayout import BoxLayout
 from app.services.contacts import update_contact, delete_contact
 from app.services.chat_storage import delete_messages
+from app.services.i18n import i18n
 
 
 class EditContactScreen(Screen):
@@ -54,7 +55,7 @@ class EditContactScreen(Screen):
             padding=10,
         )
 
-        content.add_widget(Label(text="Удалить контакт и всю историю чата?"))
+        content.add_widget(Label(text=i18n.get("delete_confirmation")))
 
         buttons = BoxLayout(
             size_hint_y=None,
@@ -62,14 +63,14 @@ class EditContactScreen(Screen):
             spacing=10,
         )
         popup = Popup(
-            title="Подтверждение удаления",
+            title=i18n.get("confirmation_title"),
             content=content,
             size_hint=(0.85, 0.35),
             auto_dismiss=False,
         )
 
-        yes_button = Button(text="Удалить")
-        no_button = Button(text="Отмена")
+        yes_button = Button(text=i18n.get("confirm"))
+        no_button = Button(text=i18n.get("cancel"))
 
         yes_button.bind(
             on_release=lambda *_: (
@@ -86,7 +87,7 @@ class EditContactScreen(Screen):
 
     def delete_contact(self):
         if self.contact is None:
-            self.ids.error_label.text = "Контакт не выбран"
+            self.ids.error_label.text = i18n.get("contact_empty")
             return
 
         try:
@@ -97,7 +98,7 @@ class EditContactScreen(Screen):
             delete_contact(self.contact.guid)
 
         except OSError:
-            self.ids.error_label.text = "Не удалось завершить удаление чата"
+            self.ids.error_label.text = i18n.get("delete_contact_fail")
             return
 
         except ValueError as error:

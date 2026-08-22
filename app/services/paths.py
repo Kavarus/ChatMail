@@ -26,3 +26,5 @@ def get_data_dir() -> Path:
 
 
 DATA_DIR = get_data_dir()
+LOCALES_DIR = DATA_DIR / "locales"
+LOCALES_DIR.mkdir(parents=True, exist_ok=True)

@@ -6,6 +6,7 @@ This file is part of ChatMail application.
 
 import json
 from uuid import uuid4
+from app.services.i18n import i18n
 from app.models.contact import Contact
 from app.services.paths import DATA_DIR
 
