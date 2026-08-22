@@ -12,6 +12,7 @@ from kivy.uix.screenmanager import ScreenManager
 
 from app.services.logger import logger
 from app.services.i18n import i18n
+from app.services.app_status import app_status
 from app.screens.main_screen import MainScreen
 from app.screens.settings_screen import SettingsScreen
 from app.screens.chat_screen import ChatScreen
@@ -80,7 +81,7 @@ class ChatApp(App):
 
     def initialize_mail_check(self, settings):
         if not has_mail_settings(settings):
-            logger.info("Mail checking is disabled: settings are empty")
+            app_status.set("Ошибка проверки почты: не настроено подключение", level="error")
             return
 
         self.mail_poller = MailPoller(settings)
@@ -118,10 +119,10 @@ class ChatApp(App):
         logger.info("Opening main screen")
         try:
             settings = load_settings()
-            self.initialize_mail_check(settings)
             self.root.transition.direction = "left"
             self.root.current = "main"
             logger.info("Main screen opened")
+            self.initialize_mail_check(settings)
         except Exception:
             logger.exception("Failed to open main screen")
 
@@ -134,7 +135,7 @@ class ChatApp(App):
         logger.info("Mail checking enabled")
 
     def start_mail_check(self, dt):
-        logger.debug("Mail check started")
+        app_status.set("Проверка почты...", level="info")
 
         with self.mail_check_lock:
             if self.mail_check_running:
@@ -165,12 +166,16 @@ class ChatApp(App):
 
     @mainthread
     def on_mail_check_success(self, messages):
+        if messages:
+            app_status.set(f"Получено новых сообщений: {len(messages)}", level="success")
+        else:
+            app_status.set("Новых сообщений нет", level="info")
         for message in messages:
             self.process_incoming_message(message)
 
     @mainthread
     def on_mail_check_error(self, error):
-        logger.exception(f"Mail check error: {error}")
+        app_status.set(f"Mail check error: {error}", level="error")
 
     def process_incoming_message(self, message):
         logger.info("Incoming message processing begin")
@@ -192,11 +197,11 @@ class ChatApp(App):
         self.mail_check_interval = interval
 
         if self.mail_poller is None:
-            logger.debug("MailPoller not initiated. Mail checking schedule not started.")
+            app_status.set("MailPoller not initiated", level="error")
             return
 
         self.mail_check_event = Clock.schedule_interval(
             self.start_mail_check,
             interval,
         )
-        logger.info("Mail checking scheduled every %s seconds", interval)
+        app_status.set(f"Mail checking scheduled every {interval} seconds", level="info")

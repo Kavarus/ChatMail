@@ -1,10 +1,13 @@
 #:import dp kivy.metrics.dp
 #:import TranslationButton app.widgets.translation_button.TranslationButton
 #:import TranslationLabel app.widgets.translation_label.TranslationLabel
+#:import AppStatusLabel app.widgets.app_status_label.AppStatusLabel
+#:import SafeAreaBoxLayout app.widgets.safe_area.SafeAreaBoxLayout
 
 <MainScreen>:
-    BoxLayout:
+    SafeAreaBoxLayout:
         orientation: "vertical"
+        spacing: 0
 
         # Верхняя строка
         BoxLayout:
@@ -44,3 +47,14 @@
                 padding: dp(5)
                 size_hint_y: None
                 height: self.minimum_height
+
+        AppStatusLabel:
+            id: app_status_label
+            size_hint_y: None
+            height: dp(38)
+            padding: dp(8), dp(4)
+            text_size: self.width - dp(16), self.height
+            halign: "left"
+            valign: "middle"
+            font_size: "13sp"
+            color: self.status_color

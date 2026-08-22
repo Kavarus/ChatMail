@@ -8,6 +8,7 @@ from kivy.uix.screenmanager import Screen
 from app.services.logger import logger
 from app.services.contacts import load_contacts, mark_contact_as_read
 from app.widgets.contact_row import ContactRow
+from app.services.app_status import app_status
 
 
 class MainScreen(Screen):
@@ -39,9 +40,10 @@ class MainScreen(Screen):
                 row.bind(on_chat_release=self.open_chat)
                 row.bind(on_edit_release=self.open_edit_contact)
                 contacts_box.add_widget(row)
+            logger.info(f"Contacts loaded: {len(contacts)}")
 
-        except Exception:
-            logger.exception("Failed to load contact list")
+        except Exception as error:
+            app_status.set(f"Ошибка загрузки контактов: {error}", level="error")
 
     def open_chat(self, row):
         """Открыть чат с выбранным контактом."""

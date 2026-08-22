@@ -3,31 +3,39 @@
 #:import TranslationLabel app.widgets.translation_label.TranslationLabel
 #:import TranslationButton app.widgets.translation_button.TranslationButton
 #:import TranslationSpinner app.widgets.translation_spinner.TranslationSpinner
+#:import SafeBottomBoxLayout app.widgets.safe_area.SafeAreaBoxLayout
 
 <WelcomeScreen>:
-    BoxLayout:
+    SafeAreaBoxLayout:
         orientation: "vertical"
-        padding: dp(20)
+        padding: dp(20), dp(12), dp(20), dp(0)
         spacing: dp(12)
 
+        # Фиксированный заголовок
+        TranslationLabel:
+            translation_key: "welcome_title"
+            size_hint_y: None
+            height: dp(58)
+            font_size: "26sp"
+            bold: True
+            halign: "center"
+            valign: "middle"
+            text_size: self.size
+
+        # Прокручиваемая часть
         ScrollView:
+            id: welcome_scroll
             do_scroll_x: False
+            do_scroll_y: True
+            bar_width: dp(4)
+            scroll_y: 1
 
             BoxLayout:
                 orientation: "vertical"
                 spacing: dp(15)
+                padding: 0, dp(5), 0, dp(12)
                 size_hint_y: None
                 height: self.minimum_height
-
-                TranslationLabel:
-                    translation_key: "welcome_title"
-                    font_size: "26sp"
-                    bold: True
-                    size_hint_y: None
-                    height: dp(50)
-                    halign: "center"
-                    valign: "middle"
-                    text_size: self.size
 
                 TranslationLabel:
                     translation_key: "welcome_text"
@@ -54,21 +62,32 @@
                     halign: "left"
                     valign: "top"
 
-        Label:
-            text: "Language"
+        # Нижняя панель
+        BoxLayout:
+            orientation: "vertical"
             size_hint_y: None
-            height: dp(30)
-            halign: "left"
-            text_size: self.size
+            height: dp(30) + dp(45) + dp(55) + dp(16)
+            spacing: dp(6)
 
-        TranslationSpinner:
-            id: language_spinner
-            size_hint_y: None
-            height: dp(45)
-            on_text: root.select_language(self.selected_language)
+            Label:
+                text: "Language"
+                size_hint_y: None
+                italic: True
+                color: 0.7, 0.7, 0.7, 1
+                height: dp(30)
+                halign: "left"
+                valign: "middle"
+                text_size: self.size
 
-        TranslationButton:
-            translation_key: "accept"
-            size_hint_y: None
-            height: dp(55)
-            on_release: root.accept()
+            TranslationSpinner:
+                id: language_spinner
+                size_hint_y: None
+                height: dp(45)
+                on_text: root.select_language(self.selected_language)
+
+            TranslationButton:
+                translation_key: "accept"
+                size_hint_y: None
+                background_color: 0.7, 1, 0.7, 1
+                height: dp(55)
+                on_release: root.accept()

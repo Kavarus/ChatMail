@@ -1,18 +1,20 @@
 #:import dp kivy.metrics.dp
 #:import TranslationButton app.widgets.translation_button.TranslationButton
 #:import TranslationLabel app.widgets.translation_label.TranslationLabel
+#:import SafeAreaBoxLayout app.widgets.safe_area.SafeAreaBoxLayout
 
 <SettingsScreen>:
-    BoxLayout:
+    SafeAreaBoxLayout:
         orientation: "vertical"
-        padding: dp(15)
         spacing: dp(10)
+        padding: dp(5)
 
         # Верхняя панель
         BoxLayout:
             size_hint_y: None
             height: dp(50)
             spacing: dp(10)
+            padding: dp(5)
 
             TranslationLabel:
                 translation_key: "settings"
