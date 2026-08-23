@@ -72,6 +72,15 @@ DEFAULT_TRANSLATION = {
     "password_required": "Введите пароль",
     "settings_saved": "Настройки успешно сохранены",
     "connection_error": "Ошибка подключения. Проверьте настройки",
+    "application_settings": "Настройки приложения",
+    "connection_settings": "Настройки подключения",
+    "active_interval": "Интервал проверки почты в активном приложении, секунд",
+    "background_interval": "Интервал проверки почты в свернутом приложении, секунд",
+    "interval_invalid": "Интервал должен быть положительным числом",
+    "bug_report": "Сообщить об ошибке",
+    "bug_report_hint": "Опишите проблему",
+    "bug_report_sent": "Сообщение отправлено",
+    "bug_report_error": "Не удалось отправить сообщение",
 }
 
 

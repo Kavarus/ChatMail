@@ -109,3 +109,11 @@ def mark_contact_as_read(guid):
             return contact
 
     return None
+
+
+def count_new_messages():
+    return sum(
+        1
+        for contact in load_contacts()
+        if contact.has_new_messages
+    )

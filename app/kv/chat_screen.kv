@@ -7,6 +7,7 @@
 <ChatScreen>:
     SafeAreaBoxLayout:
         orientation: "vertical"
+        size_hint: 1, 1
 
         # Верхняя панель
         BoxLayout:
@@ -63,6 +64,7 @@
                 id: message_input
                 multiline: False
                 hint_translation_key: "message_hint"
+                input_type: "text"
                 on_text_validate: root.send_message()
 
             TranslationButton:

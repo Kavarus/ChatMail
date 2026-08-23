@@ -7,6 +7,7 @@
 <AddContactScreen>:
     SafeAreaBoxLayout:
         orientation: "vertical"
+        size_hint: 1, 1
         spacing: dp(10)
 
         TranslationLabel:
@@ -21,6 +22,7 @@
             multiline: False
             size_hint_y: None
             height: dp(45)
+            input_type: "text"
 
         TranslationTextInput:
             id: contact_address
@@ -28,6 +30,7 @@
             multiline: False
             size_hint_y: None
             height: dp(45)
+            input_type: "text"
 
         Label:
             id: error_label

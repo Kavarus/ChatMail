@@ -8,7 +8,7 @@ from app.services.logger import logger
 from app.services.mail_reader import read_new_messages
 from app.services.chat_storage import save_message
 from app.services.contacts import load_contacts
-from app.services.storage import (load_processed_ids, save_processed_ids)
+from app.services.storage import (load_processed_ids, save_processed_ids, get_connection_settings)
 
 
 def normalize_email(value: str) -> str:
@@ -17,7 +17,7 @@ def normalize_email(value: str) -> str:
 
 class MailPoller:
     def __init__(self, settings):
-        self.settings = settings
+        self.settings = get_connection_settings(settings)
         self.processed_ids = load_processed_ids()
         logger.info("MailPoller initialize")
 
@@ -59,8 +59,9 @@ class MailPoller:
                     text=message["text"],
                     created_at=message["created_at"],
                 )
-            except Exception:
-                logger.exception("Failed to save incoming message: %s", message["id"])
+            except Exception as error:
+                unsaved_message = message["id"]
+                logger.exception(f"Failed to save incoming message {unsaved_message}: {error}")
                 continue
 
             contact.has_new_messages = True

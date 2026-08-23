@@ -12,8 +12,8 @@ from kivy.core.window import Window
 
 
 class SafeAreaBoxLayout(BoxLayout):
-    safe_top = NumericProperty(dp(24))
-    safe_bottom = NumericProperty(dp(16))
+    safe_top = NumericProperty(dp(36))
+    safe_bottom = NumericProperty(dp(36))
     safe_left = NumericProperty(0)
     safe_right = NumericProperty(0)
 
@@ -54,7 +54,7 @@ class SafeAreaBoxLayout(BoxLayout):
         self.safe_right = max(dp(5), right)
         self.padding = (
             self.safe_left,
-            self.safe_bottom,
-            self.safe_right,
             self.safe_top,
+            self.safe_right,
+            self.safe_bottom,
         )

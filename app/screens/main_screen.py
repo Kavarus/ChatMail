@@ -9,6 +9,7 @@ from app.services.logger import logger
 from app.services.contacts import load_contacts, mark_contact_as_read
 from app.widgets.contact_row import ContactRow
 from app.services.app_status import app_status
+from app.services.storage import load_settings, has_mail_settings
 
 
 class MainScreen(Screen):
@@ -18,6 +19,12 @@ class MainScreen(Screen):
 
     def open_settings(self):
         """Открыть экран настроек."""
+        settings_screen = self.manager.get_screen("settings")
+        settings = load_settings()
+        if has_mail_settings(settings):
+            settings_screen.open_mode("application")
+        else:
+            settings_screen.open_mode("connection")
         self.manager.transition.direction = "right"
         self.manager.current = "settings"
 

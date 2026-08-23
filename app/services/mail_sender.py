@@ -5,15 +5,16 @@ This file is part of ChatMail application.
 """
 
 import smtplib
+from pathlib import Path
 from email.message import EmailMessage
 from app.services.logger import logger
-from app.services.storage import load_settings
+from app.services.storage import get_connection_settings
 
 
-def send_email(recipient, subject, body):
+def send_email(recipient, subject, body, attachment=None):
     logger.info("Email send starting. Address: %s", recipient)
 
-    settings = load_settings()
+    settings = get_connection_settings()
 
     server = settings.get("smtp_server")
     username = settings.get("user")
@@ -29,6 +30,17 @@ def send_email(recipient, subject, body):
         message["To"] = recipient
         message["Subject"] = subject
         message.set_content(body)
+
+        if attachment:
+            attachment = Path(attachment)
+            if attachment.exists():
+                with attachment.open("rb") as file:
+                    message.add_attachment(
+                        file.read(),
+                        maintype="application",
+                        subtype="octet-stream",
+                        filename=attachment.name,
+                    )
 
         # Обычно SMTP-серверы используют порт 465 с SSL. (server, 465, timeout=20)
         port = int(settings.get("smtp_port", 465))

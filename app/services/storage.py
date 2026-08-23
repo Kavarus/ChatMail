@@ -16,30 +16,60 @@ REQUIRED_MAIL_SETTINGS = (
     "imap_server",
     "imap_port",
 )
-DEFAULT_LANGUAGE = "ru"
+DEFAULT_APPLICATION_SETTINGS = {
+    "active_mail_interval": 45,
+    "background_mail_interval": 300,
+    "language": "ru",
+}
 
 
 def is_first_run(settings):
     return not bool(settings.get("terms_accepted", False))
 
 
+def default_settings():
+    return {
+        "application": DEFAULT_APPLICATION_SETTINGS.copy(),
+        "connection": {},
+        "terms_accepted": False,
+    }
+
+
 def save_settings(settings):
-    logger.info("Email server settings saved")
-    SETTINGS_FILE.parent.mkdir(exist_ok=True)
+    SETTINGS_FILE.parent.mkdir(parents=True, exist_ok=True)
 
     with SETTINGS_FILE.open("w", encoding="utf-8") as file:
         json.dump(settings, file, ensure_ascii=False, indent=4)
+    logger.info("Email server settings saved")
 
 
 def load_settings():
     if not SETTINGS_FILE.exists():
-        return {}
+        return default_settings()
 
     try:
         with SETTINGS_FILE.open("r", encoding="utf-8") as file:
-            return json.load(file)
+            settings = json.load(file)
+        return normalize_settings(settings)
     except (OSError, json.JSONDecodeError):
         return {}
+
+
+def normalize_settings(settings):
+    result = default_settings()
+
+    application = settings.get("application", {})
+    connection = settings.get("connection", {})
+
+    if isinstance(application, dict):
+        result["application"].update(application)
+
+    if isinstance(connection, dict):
+        result["connection"].update(connection)
+
+    result["terms_accepted"] = bool(settings.get("terms_accepted", False))
+
+    return result
 
 
 def accept_terms(language):
@@ -48,17 +78,30 @@ def accept_terms(language):
         language = i18n.language
 
     settings = load_settings()
-    settings["language"] = language
+    settings["application"]["language"] = language
     settings["terms_accepted"] = True
     save_settings(settings)
 
 
-def has_mail_settings(settings):
-    if not settings:
-        return False
+def get_application_settings(settings=None):
+    settings = settings or load_settings()
 
-    return all(
-        str(settings.get(key, "")).strip()
+    application = DEFAULT_APPLICATION_SETTINGS.copy()
+    application.update(settings.get("application", {}))
+
+    return application
+
+
+def get_connection_settings(settings=None):
+    settings = settings or load_settings()
+    return settings.get("connection", {}).copy()
+
+
+def has_mail_settings(settings):
+    connection = get_connection_settings(settings)
+
+    return bool(connection) and all(
+        str(connection.get(key, "")).strip()
         for key in REQUIRED_MAIL_SETTINGS
     )
 
@@ -87,9 +130,10 @@ def load_processed_ids():
 
 def get_saved_language(settings):
     from app.services.i18n import i18n
-    language = settings.get("language", DEFAULT_LANGUAGE)
+    application = get_application_settings(settings)
+    language = application.get("language", DEFAULT_APPLICATION_SETTINGS["language"])
     available_languages = i18n.get_available_languages()
     if language in available_languages:
         return language
 
-    return available_languages[0] if available_languages else DEFAULT_LANGUAGE
+    return available_languages[0] if available_languages else DEFAULT_APPLICATION_SETTINGS["language"]

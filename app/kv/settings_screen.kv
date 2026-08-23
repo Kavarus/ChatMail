@@ -1,11 +1,17 @@
 #:import dp kivy.metrics.dp
+#:import Color kivy.graphics.Color
+#:import Rectangle kivy.graphics.Rectangle
+#:import Line kivy.graphics.Line
 #:import TranslationButton app.widgets.translation_button.TranslationButton
 #:import TranslationLabel app.widgets.translation_label.TranslationLabel
+#:import TranslationTextInput app.widgets.translation_text_input.TranslationTextInput
+#:import TranslationSpinner app.widgets.translation_spinner.TranslationSpinner
 #:import SafeAreaBoxLayout app.widgets.safe_area.SafeAreaBoxLayout
 
 <SettingsScreen>:
     SafeAreaBoxLayout:
         orientation: "vertical"
+        size_hint: 1, 1
         spacing: dp(10)
         padding: dp(5)
 
@@ -31,57 +37,233 @@
                 width: dp(90)
                 on_release: root.go_back()
 
-        TranslationLabel:
-            translation_key: "mail_provider"
-            size_hint_y: None
-            height: dp(30)
-            halign: "left"
-            text_size: self.size
-
-        Spinner:
-            id: provider_spinner
-            text: root.selected_server
-            values: ["Mail.ru", "Gmail", "Yandex", "Outlook"]
+        BoxLayout:
             size_hint_y: None
             height: dp(45)
+            spacing: dp(5)
 
-        TranslationLabel:
-            translation_key: "email"
-            size_hint_y: None
-            height: dp(30)
-            halign: "left"
-            text_size: self.size
+            TranslationButton:
+                id: application_mode_button
+                translation_key: "application_settings"
+                disabled: root.settings_mode == "application"
+                on_release: root.open_mode("application")
+                text_size: self.width - dp(10), self.height - dp(5)
+                halign: "center"
+                valign: "middle"
+                background_normal: "" if self.disabled else "atlas://data/images/defaulttheme/button"
+                background_down: "" if self.disabled else "atlas://data/images/defaulttheme/button_pressed"
+                background_disabled_normal: ""
+                background_disabled_down: ""
+                background_color: (0, 0, 0, 0) if self.disabled else (1, 1, 1, 1)
+                disabled_color: (1, 1, 1, 1)
+                font_size: (min(self.width, self.height) * 0.42 if self.disabled else min(self.width, self.height) * 0.35)
+                canvas.before:
+                    # Контур сверху, слева и справа
+                    Color:
+                        rgba: (0.345, 0.345, 0.345, 1) if self.disabled else (0, 0, 0, 0)
+                    Line:
+                        points:
+                            self.x, self.y, self.x, self.top, self.right, self.top, self.right, self.y
+                        width: dp(1.5)
 
-        TextInput:
-            id: email_input
-            multiline: False
-            size_hint_y: None
-            height: dp(45)
+            TranslationButton:
+                id: connection_mode_button
+                translation_key: "connection_settings"
+                disabled: root.settings_mode == "connection"
+                on_release: root.open_mode("connection")
+                text_size: self.width - dp(10), self.height - dp(5)
+                halign: "center"
+                valign: "middle"
+                background_normal: "" if self.disabled else "atlas://data/images/defaulttheme/button"
+                background_down: "" if self.disabled else "atlas://data/images/defaulttheme/button_pressed"
+                background_disabled_normal: ""
+                background_disabled_down: ""
+                background_color: (0, 0, 0, 0) if self.disabled else (1, 1, 1, 1)
+                disabled_color: (1, 1, 1, 1)
+                font_size: (min(self.width, self.height) * 0.42 if self.disabled else min(self.width, self.height) * 0.35)
+                canvas.before:
+                    Color:
+                        rgba: (0.345, 0.345, 0.345, 1) if self.disabled else (0, 0, 0, 0)
+                    Line:
+                        points:
+                            self.x, self.y, self.x, self.top, self.right, self.top, self.right, self.y
+                        width: dp(1.5)
 
-        TranslationLabel:
-            translation_key: "password"
-            size_hint_y: None
-            height: dp(30)
-            halign: "left"
-            text_size: self.size
+        ScrollView:
+            id: settings_scroll
+            do_scroll_x: False
+            do_scroll_y: True
+            size_hint_y: 1
+            bar_width: dp(4)
 
-        TextInput:
-            id: password_input
-            password: True
-            multiline: False
-            size_hint_y: None
-            height: dp(45)
+            BoxLayout:
+                orientation: "vertical"
+                spacing: dp(10)
+                padding: 0, 0, 0, dp(10)
+                size_hint_y: None
+                size_hint_x: 1
+                width: settings_scroll.width
+                height: self.minimum_height
 
-        TranslationLabel:
-            translation_key: "password_hint"
-            size_hint_y: None
-            height: dp(70)
-            color: 0.5, 0.5, 0.5, 1
-            font_size: "13sp"
-            halign: "left"
-            text_size: self.size
+                # Настройки приложения
+                BoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(8)
+                    size_hint_y: None
+                    height: self.minimum_height if root.settings_mode == "application" else 0
+                    opacity: 1 if root.settings_mode == "application" else 0
+                    disabled: root.settings_mode != "application"
 
-        Widget:
+                    TranslationLabel:
+                        translation_key: "active_interval"
+                        size_hint_y: None
+                        height: dp(30)
+                        font_size: min(self.width, self.height) * 0.5
+                        text_size: self.width - dp(10), None
+
+                    BoxLayout:
+                        orientation: "horizontal"
+                        spacing: dp(10)
+                        size_hint_y: None
+                        height: dp(55)
+
+                        Label:
+                            text: f"{int(root.active_interval)}"
+                            size_hint_x: None
+                            width: dp(65)
+                            font_size: "18sp"
+                            halign: "center"
+                            valign: "middle"
+                            text_size: self.size
+
+                        Slider:
+                            id: active_interval_slider
+                            min: 30
+                            max: 90
+                            step: 15
+                            value: root.active_interval
+                            cursor_size: dp(24), dp(24)
+                            size_hint_y: None
+                            height: dp(55)
+                            on_value:
+                                root.active_interval = int(self.value)
+
+                    TranslationLabel:
+                        translation_key: "background_interval"
+                        size_hint_y: None
+                        height: dp(30)
+                        font_size: min(self.width, self.height) * 0.5
+                        text_size: self.width - dp(10), None
+
+                    BoxLayout:
+                        spacing: dp(10)
+                        size_hint_y: None
+                        height: dp(55)
+
+                        Label:
+                            text: f"{int(root.background_interval)}"
+                            size_hint_x: None
+                            width: dp(65)
+                            font_size: "18sp"
+                            halign: "center"
+                            valign: "middle"
+                            text_size: self.size
+
+                        Slider:
+                            id: background_interval_slider
+                            min: 180
+                            max: 600
+                            step: 60
+                            value: root.background_interval
+                            cursor_size: dp(24), dp(24)
+                            size_hint_y: None
+                            height: dp(55)
+                            on_value:
+                                root.background_interval = int(self.value)
+
+                    TranslationLabel:
+                        translation_key: "select_language"
+                        size_hint_y: None
+                        height: dp(30)
+                        halign: "left"
+                        text_size: self.size
+
+                    TranslationSpinner:
+                        id: language_spinner
+                        size_hint_y: None
+                        height: dp(45)
+
+                    TranslationButton:
+                        id: bug_report_button
+                        translation_key: "bug_report"
+                        size_hint_y: None
+                        height: dp(50)
+                        on_release: root.open_bug_report()
+
+                    Label:
+                        text: ""
+                        size_hint_y: None
+                        height: dp(70)
+                        font_size: "13sp"
+                        halign: "left"
+                        text_size: self.size
+
+                # Настройки подключения
+                BoxLayout:
+                    orientation: "vertical"
+                    spacing: dp(8)
+                    size_hint_y: None
+                    height: self.minimum_height if root.settings_mode == "connection" else 0
+                    opacity: 1 if root.settings_mode == "connection" else 0
+                    disabled: root.settings_mode != "connection"
+
+                    TranslationLabel:
+                        translation_key: "mail_provider"
+                        size_hint_y: None
+                        height: dp(30)
+                        halign: "left"
+
+                    Spinner:
+                        id: provider_spinner
+                        values: ["Mail.ru", "Gmail", "Yandex", "Outlook"]
+                        size_hint_y: None
+                        height: dp(45)
+
+                    TranslationLabel:
+                        translation_key: "email"
+                        size_hint_y: None
+                        height: dp(30)
+                        halign: "left"
+
+                    TextInput:
+                        id: email_input
+                        multiline: False
+                        size_hint_y: None
+                        height: dp(45)
+                        input_type: "text"
+
+                    TranslationLabel:
+                        translation_key: "password"
+                        size_hint_y: None
+                        height: dp(30)
+                        halign: "left"
+
+                    TextInput:
+                        id: password_input
+                        password: True
+                        multiline: False
+                        size_hint_y: None
+                        height: dp(45)
+                        input_type: "text"
+
+                    TranslationLabel:
+                        translation_key: "password_hint"
+                        size_hint_y: None
+                        height: dp(70)
+                        color: 0.5, 0.5, 0.5, 1
+                        font_size: "13sp"
+                        halign: "left"
+                        text_size: self.size
 
         # Сообщение об успехе или ошибке
         Label:
@@ -99,4 +281,4 @@
             translation_key: "save"
             size_hint_y: None
             height: dp(50)
-            on_release: root.save()
+            on_release: root.save_current_settings()

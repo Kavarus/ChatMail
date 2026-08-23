@@ -13,6 +13,7 @@ from kivy.uix.screenmanager import ScreenManager
 from app.services.logger import logger
 from app.services.i18n import i18n
 from app.services.app_status import app_status
+from app.services.notifications import clear_new_message_marker
 from app.screens.main_screen import MainScreen
 from app.screens.settings_screen import SettingsScreen
 from app.screens.chat_screen import ChatScreen
@@ -20,11 +21,10 @@ from app.screens.add_contact_screen import AddContactScreen
 from app.screens.edit_contact_screen import EditContactScreen
 from app.screens.welcome_screen import WelcomeScreen
 from app.services.mail_poller import MailPoller
-from app.services.storage import load_settings, has_mail_settings, is_first_run, get_saved_language
-
-
-ACTIVE_MAIL_INTERVAL = 45
-BACKGROUND_MAIL_INTERVAL = 300
+from app.services.storage import (
+    load_settings, has_mail_settings, is_first_run,
+    get_saved_language, get_application_settings
+)
 
 
 class ChatApp(App):
@@ -79,21 +79,33 @@ class ChatApp(App):
             logger.exception("Error on manager create")
             raise
 
+    def get_mail_intervals(self):
+        settings = load_settings()
+        application = get_application_settings(settings)
+
+        return (
+            int(application["active_mail_interval"]),
+            int(application["background_mail_interval"]),
+        )
+
     def initialize_mail_check(self, settings):
         if not has_mail_settings(settings):
             app_status.set("Ошибка проверки почты: не настроено подключение", level="error")
             return
 
         self.mail_poller = MailPoller(settings)
-        self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
+        active_interval, _ = self.get_mail_intervals()
+        self.schedule_mail_check(active_interval)
 
     def on_start(self):
         logger.info("Application started")
+        clear_new_message_marker()
 
     def on_pause(self):
         logger.info("Application paused")
         self.is_app_in_background = True
-        self.schedule_mail_check(BACKGROUND_MAIL_INTERVAL)
+        _, background_interval = self.get_mail_intervals()
+        self.schedule_mail_check(background_interval)
         return True
 
     def on_resume(self):
@@ -101,7 +113,8 @@ class ChatApp(App):
         self.is_app_in_background = False
 
         if self.mail_poller is not None:
-            self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
+            active_interval, _ = self.get_mail_intervals()
+            self.schedule_mail_check(active_interval)
 
             # Желательно проверить почту сразу после возвращения
             Clock.schedule_once(
@@ -123,15 +136,16 @@ class ChatApp(App):
             self.root.current = "main"
             logger.info("Main screen opened")
             self.initialize_mail_check(settings)
-        except Exception:
-            logger.exception("Failed to open main screen")
+        except Exception as error:
+            logger.exception(f"Failed to open main screen: {error}")
 
     def enable_mail_check(self, settings):
         if self.mail_check_event is not None:
             self.mail_check_event.cancel()
 
         self.mail_poller = MailPoller(settings)
-        self.schedule_mail_check(ACTIVE_MAIL_INTERVAL)
+        active_interval, _ = self.get_mail_intervals()
+        self.schedule_mail_check(active_interval)
         logger.info("Mail checking enabled")
 
     def start_mail_check(self, dt):
