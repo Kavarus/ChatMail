@@ -8,7 +8,10 @@ from app.services.logger import logger
 from app.services.mail_reader import read_new_messages
 from app.services.chat_storage import save_message
 from app.services.contacts import load_contacts
-from app.services.storage import (load_processed_ids, save_processed_ids, get_connection_settings)
+from app.services.storage import (
+    load_processed_ids, save_processed_ids, get_connection_settings,
+    load_pending_delete_ids, save_pending_delete_ids,
+)
 
 
 def normalize_email(value: str) -> str:
@@ -19,26 +22,27 @@ class MailPoller:
     def __init__(self, settings):
         self.settings = get_connection_settings(settings)
         self.processed_ids = load_processed_ids()
+        self.pending_delete_ids = load_pending_delete_ids()
         logger.info("MailPoller initialize")
 
     def check(self):
         contacts = load_contacts()
+        addresses = [contact.email for contact in contacts]
 
-        addresses = [
-            contact.email
-            for contact in contacts
-        ]
-
-        incoming = read_new_messages(
-            self.settings,
-            addresses
-        )
+        result = read_new_messages(self.settings, addresses, self.pending_delete_ids)
+        incoming = result["messages"]
+        deleted_ids = result["deleted_ids"]
         logger.info("Get incoming messages by IMAP: %d", len(incoming))
+
+        if deleted_ids:
+            self.pending_delete_ids -= deleted_ids
+            save_pending_delete_ids(self.pending_delete_ids)
 
         new_messages = []
 
         for message in incoming:
-            if message["id"] in self.processed_ids:
+            message_id = message["id"]
+            if message_id in self.processed_ids:
                 continue
 
             contact = next(
@@ -60,15 +64,16 @@ class MailPoller:
                     created_at=message["created_at"],
                 )
             except Exception as error:
-                unsaved_message = message["id"]
-                logger.exception(f"Failed to save incoming message {unsaved_message}: {error}")
+                logger.exception(f"Failed to save incoming message {message_id}: {error}")
                 continue
+
+            self.processed_ids.add(message_id)
+            self.pending_delete_ids.add(message_id)
 
             contact.has_new_messages = True
             message["contact_guid"] = contact.guid
             message["contact_name"] = contact.name
 
-            self.processed_ids.add(message["id"])
             new_messages.append(message)
 
         # Сохраняем флаги новых сообщений
@@ -77,6 +82,7 @@ class MailPoller:
 
         if new_messages:
             save_processed_ids(self.processed_ids)
+            save_pending_delete_ids(self.pending_delete_ids)
             logger.info("New messages from contacts: %d", len(new_messages))
 
         return new_messages

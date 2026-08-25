@@ -8,6 +8,7 @@ from threading import Lock, Thread
 from kivy.app import App
 from kivy.clock import Clock, mainthread
 from kivy.lang import Builder
+from kivy.utils import platform
 from kivy.uix.screenmanager import ScreenManager
 
 from app.services.logger import logger
@@ -37,6 +38,7 @@ class ChatApp(App):
         self.mail_check_event = None
         self.mail_check_interval = None
         self.is_app_in_background = False
+        self.background_service = None
 
     def build(self):
         logger.info("Started build()")
@@ -100,6 +102,12 @@ class ChatApp(App):
     def on_start(self):
         logger.info("Application started")
         clear_new_message_marker()
+        settings = load_settings()
+        if has_mail_settings(settings):
+            logger.info("Mail settings exist; starting background service")
+            self.start_background_service()
+        else:
+            logger.warning("Background service is not started: mail settings are incomplete")
 
     def on_pause(self):
         logger.info("Application paused")
@@ -219,3 +227,24 @@ class ChatApp(App):
             interval,
         )
         app_status.set(f"Mail checking scheduled every {interval} seconds", level="info")
+
+    def start_background_service(self):
+        if platform != "android":
+            logger.info(f"Background service is not started: platform={platform}")
+            return
+
+        if self.background_service is not None:
+            logger.info("Background service is already started")
+            return
+
+        try:
+            logger.info("Starting Android background service")
+
+            from android import AndroidService  # type: ignore
+
+            self.background_service = AndroidService("ChatMail", "Проверка почты выполняется в фоне")
+            self.background_service.start("service/main.py")
+            logger.info("Android background service start requested")
+
+        except Exception as error:
+            logger.exception(f"Cannot start Android background service: {error}")

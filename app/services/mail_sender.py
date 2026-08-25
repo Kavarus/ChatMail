@@ -12,13 +12,12 @@ from app.services.storage import get_connection_settings
 
 
 def send_email(recipient, subject, body, attachment=None):
-    logger.info("Email send starting. Address: %s", recipient)
-
     settings = get_connection_settings()
 
     server = settings.get("smtp_server")
     username = settings.get("user")
     password = settings.get("password")
+    logger.info(f"Email send starting. Address: {server}")
 
     if not server or not username or not password:
         logger.error("SMTP-settings not found")
@@ -46,12 +45,12 @@ def send_email(recipient, subject, body, attachment=None):
         port = int(settings.get("smtp_port", 465))
 
         with smtplib.SMTP_SSL(server, port, timeout=20) as smtp:
-            logger.info("Connection to SMTP-server %s success", server)
+            logger.info(f"Connection to {server} success")
             smtp.login(username, password)
             logger.info("SMTP-server authority success")
             smtp.send_message(message)
             logger.info("Message send success")
 
     except Exception:
-        logger.exception("Message send failed. Address: %s", recipient)
+        logger.exception(f"Message send failed. Server: {server}")
         raise

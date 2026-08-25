@@ -10,6 +10,7 @@ from app.services.paths import DATA_DIR
 
 SETTINGS_FILE = DATA_DIR / "settings.json"
 PROCESSED_IDS_FILE = DATA_DIR / "processed_message_ids.json"
+PENDING_DELETE_IDS_FILE = DATA_DIR / "pending_delete_ids.json"
 REQUIRED_MAIL_SETTINGS = (
     "user",
     "password",
@@ -123,6 +124,29 @@ def load_processed_ids():
 
     try:
         with PROCESSED_IDS_FILE.open("r", encoding="utf-8") as file:
+            return set(json.load(file))
+    except (OSError, json.JSONDecodeError):
+        return set()
+
+
+def save_pending_delete_ids(message_ids):
+    logger.info("Save pending delete ids")
+    PENDING_DELETE_IDS_FILE.parent.mkdir(parents=True, exist_ok=True)
+
+    temporary_file = PENDING_DELETE_IDS_FILE.with_suffix(".tmp")
+
+    with temporary_file.open("w", encoding="utf-8") as file:
+        json.dump(sorted(message_ids), file, ensure_ascii=False, indent=4)
+
+    temporary_file.replace(PENDING_DELETE_IDS_FILE)
+
+
+def load_pending_delete_ids():
+    if not PENDING_DELETE_IDS_FILE.exists():
+        return set()
+
+    try:
+        with PENDING_DELETE_IDS_FILE.open("r", encoding="utf-8") as file:
             return set(json.load(file))
     except (OSError, json.JSONDecodeError):
         return set()

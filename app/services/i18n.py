@@ -80,7 +80,7 @@ DEFAULT_TRANSLATION = {
     "bug_report": "Сообщить об ошибке",
     "bug_report_hint": "Опишите проблему",
     "bug_report_sent": "Сообщение отправлено",
-    "bug_report_error": "Не удалось отправить сообщение",
+    "bug_report_error": "Не удалось отправить отчет {error}",
 }
 
 

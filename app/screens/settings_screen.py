@@ -168,7 +168,7 @@ class SettingsScreen(Screen):
             return
 
         content = BoxLayout(orientation="vertical", spacing="10dp", padding="10dp")
-        message_input = TextInput(multiline=True, hint_text=i18n.get("bug_report_hint"))
+        message_input = TextInput(multiline=True, hint_text=i18n.get("bug_report_hint"), input_type="text")
         buttons = BoxLayout(size_hint_y=None, height="45dp", spacing="10dp")
         popup = Popup(title=i18n.get("bug_report"), content=content, size_hint=(0.9, 0.5), auto_dismiss=False)
         send_button = Button(text=i18n.get("send"))
@@ -200,6 +200,7 @@ class SettingsScreen(Screen):
         ).start()
 
     def _send_bug_report_background(self, popup, text):
+        logger.info(f"Bug report prepared to send")
         try:
             send_email(
                 recipient=DEVELOPER_EMAIL,
@@ -209,7 +210,7 @@ class SettingsScreen(Screen):
             )
         except Exception as error:
             logger.exception(f"Bug report sending failed: {error}")
-            self.show_error(i18n.get("bug_report_error"))
+            self.show_error(i18n.get("bug_report_error").format(error=error))
             return
 
         popup.dismiss()

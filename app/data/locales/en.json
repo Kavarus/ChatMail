@@ -32,7 +32,7 @@
     "interval_invalid": "The interval must be a positive number",
     "connection_error": "Connection error. Check your setting",
     "bug_report": "Report an error",
-    "bug_report_error": "Failed to send message",
+    "bug_report_error": "Failed to send report: {error}",
     "bug_report_hint": "Describe the problem",
     "bug_report_sent": "Message sent",
     "add_contact": "Add contact",

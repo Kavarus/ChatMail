@@ -4,7 +4,7 @@ SPDX-License-Identifier: GPL-3.0-or-later
 This file is part of ChatMail application.
 """
 
-from shutil import copy2
+from shutil import copyfile
 from pathlib import Path
 from kivy.utils import platform
 from app.services.logger import logger
@@ -26,6 +26,12 @@ def install_locales():
         target_file = LOCALES_DIR / source_file.name
 
         # Не перезаписываем переводы, изменённые пользователем
-        if not target_file.exists():
+        if target_file.exists():
+            continue
+
+        try:
             logger.info(f"Coping locale {source_file.name}")
-            copy2(source_file, target_file)
+            copyfile(source_file, target_file)
+
+        except OSError:
+            logger.exception(f"Cannot copy locale {source_file} to {target_file}")

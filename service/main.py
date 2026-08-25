@@ -29,6 +29,7 @@ def run():
         started_at = time.monotonic()
 
         try:
+            logger.info("Background mail check started")
             messages = poller.check()
             if messages:
                 unread_count = count_new_messages()
@@ -48,4 +49,5 @@ def run():
 
 
 if __name__ == "__main__":
+    logger.info("service/main.py executed")
     run()
