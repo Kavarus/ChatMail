@@ -81,6 +81,7 @@ DEFAULT_TRANSLATION = {
     "bug_report_hint": "Опишите проблему",
     "bug_report_sent": "Сообщение отправлено",
     "bug_report_error": "Не удалось отправить отчет {error}",
+    "default_bug_report": "Лог последних событий"
 }
 
 
@@ -125,7 +126,7 @@ class I18n(EventDispatcher):
                 logger.warning("Localization file must contain a JSON object: %s", file_path)
                 continue
 
-            language_name = data.pop("language_name", language)
+            language_name = data.get("language_name", language)
 
             if not isinstance(language_name, str):
                 language_name = language

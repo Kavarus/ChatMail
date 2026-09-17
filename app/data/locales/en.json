@@ -1,6 +1,7 @@
 {
     "language_code": "en",
     "language_name": "English",
+    "loc_version": "1.50",
     "welcome_title": "ChatMail",
     "welcome_text": "This application allows you to communicate with selected contacts in a chat format via an email service.\\n\\n You should use an app password for the application to work. Messages will be received only from contacts added in advance.",
     "terms_title": "Terms of use",

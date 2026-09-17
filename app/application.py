@@ -38,7 +38,7 @@ class ChatApp(App):
         self.mail_check_event = None
         self.mail_check_interval = None
         self.is_app_in_background = False
-        self.background_service = None
+        self.background_activity = None
 
     def build(self):
         logger.info("Started build()")
@@ -233,20 +233,20 @@ class ChatApp(App):
             logger.info(f"Background service is not started: platform={platform}")
             return
 
-        if self.background_service is not None:
+        if self.background_activity is not None:
             logger.info("Background service is already started")
             return
 
         try:
-            logger.info(f"Starting Android background service: platform={platform}")
+            logger.info(f"Setting up Android background service: platform={platform}")
 
-            from android import AndroidService  # type: ignore
+            from jnius import autoclass
 
-            self.background_service = AndroidService("ChatMail", "Проверка почты выполняется в фоне")
-            logger.info(f"AndroidService object created: {self.background_service}")
-            self.background_service.start()
+            self.background_activity = autoclass('org.kivy.android.PythonActivity').mActivity
+            service_name = f"{self.background_activity.getPackageName()}.ServiceChatmail_service"
+            autoclass(service_name).start(self.background_activity, '')
             logger.info("Android background service start requested")
 
         except Exception as error:
-            self.background_service = None
-            logger.exception(f"Cannot start Android background service: {error}")
+            self.background_activity = None
+            logger.exception(f"Unable to start Android background service: {error}")

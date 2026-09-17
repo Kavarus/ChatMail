@@ -36,17 +36,9 @@ def check_mail_connection(settings):
         smtp_port = int(settings.get("smtp_port", 465))
 
         if settings.get("ssl", True):
-            smtp = smtplib.SMTP_SSL(
-                smtp_server,
-                smtp_port,
-                timeout=15,
-            )
+            smtp = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=15)
         else:
-            smtp = smtplib.SMTP(
-                smtp_server,
-                smtp_port,
-                timeout=15,
-            )
+            smtp = smtplib.SMTP(smtp_server, smtp_port, timeout=15)
             smtp.starttls()
 
         smtp.login(

@@ -11,12 +11,12 @@ if platform == "win":
     Config.set("graphics", "height", "800")
     Config.set("graphics", "resizable", "1")
 
+from app.services.logger import logger
 from app.services.locales_init import install_locales
 try:
     install_locales()
-except Exception:
-    import traceback
-    traceback.print_exc()
+except Exception as error:
+    logger.exception(f"Locale installation failed: {error}")
 
 from app.application import ChatApp
 if __name__ == "__main__":
