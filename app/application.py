@@ -238,13 +238,15 @@ class ChatApp(App):
             return
 
         try:
-            logger.info("Starting Android background service")
+            logger.info(f"Starting Android background service: platform={platform}")
 
             from android import AndroidService  # type: ignore
 
             self.background_service = AndroidService("ChatMail", "Проверка почты выполняется в фоне")
-            self.background_service.start("service/main.py")
+            logger.info(f"AndroidService object created: {self.background_service}")
+            self.background_service.start()
             logger.info("Android background service start requested")
 
         except Exception as error:
+            self.background_service = None
             logger.exception(f"Cannot start Android background service: {error}")

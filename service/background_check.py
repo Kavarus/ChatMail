@@ -49,5 +49,5 @@ def run():
 
 
 if __name__ == "__main__":
-    logger.info("service/main.py executed")
+    logger.info("service/background_check.py executed")
     run()
